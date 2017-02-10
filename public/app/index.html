@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="shortcut icon" href="/public/assets/images/title.ico" type="image/x-icon" />
+        <title>易盘-基于MEAN框架的新一代网络教学服务平台</title>
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <meta name="description" content="易盘-基于MEAN框架的新一代网络教学服务平台">
+        <base href="/">
+        <link rel="stylesheet" href="public/bower/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="public/bower/font-awesome/css/font-awesome.min.css">
+        <link rel="stylesheet" href="public/bower/angular-meditor/dist/meditor.css">
+        <link rel="stylesheet" href="public/app/libs/style.css">
+        <!-- link for CSS when using the tree as a Dom element -->
+        <!--<link rel="stylesheet" href="public/bower/angular-tree-control/css/tree-control.css">-->
+        <!-- link for CSS when using the tree as an attribute -->
+        <link rel="stylesheet" href="public/bower/angular-tree-control/css/tree-control-attribute.css">
+    </head>
+
+    <body id="userApp" ng-app="userApp" ng-controller="loginController as main">
+        <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="/"><span class="glyphicon glyphicon-leaf text-success"></span>
+                    易盘
+                </a>
+                <button type="button" class="navbar-toggle" data-toggle="collapse"
+                        data-target="#example-navbar-collapse">
+                    <span class="sr-only">切换导航</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+
+            <div class="collapse navbar-collapse navbar-right" id="example-navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li ng-if="main.loggedIn && main.user.code!='admin'"><a href="/signstudent" title="学生签到">
+                        <i class="fa fa-check-square-o"></i>签到</a></li>
+                    <li ng-if="main.loggedIn && main.user.code=='admin'"><a href="/checks" title="实验抽查">
+                        <i class="fa fa-calendar-check-o"></i>抽查</a></li>
+                    <li ng-if="main.loggedIn && main.user.code=='admin'"><a href="/signs" title="签到管理">
+                        <i class="fa fa-check-square-o"></i>签到</a></li>
+                    <li ng-if="main.loggedIn && main.user.code=='admin'"><a href="/filestat" title="签到管理">
+                        <i class="fa fa-bar-chart"></i>作业统计</a>
+                    </li><li ng-if="main.loggedIn && main.user.code!='admin'"><a href="/exams" title="考试、测验、练习">
+                        <i class="fa fa-bar-chart"></i>考试</a></li>
+
+                    <li ng-if="main.loggedIn && main.user.code=='admin'" class="dropdown">
+                        <a href="#" title="设置考试相关的信息" class="dropdown-toggle" data-toggle="dropdown">
+                            <i class="fa fa-flag-checkered"></i> 考试
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/exams" title="查看考试试卷"><i class="fa fa-flag-checkered"></i> 考试试卷
+                            </a></li><li><a href="/examconfigs" title="管理考试库"><span class="glyphicon glyphicon-th-large"></span> 考试设置
+                            </a></li><li><a href="/sheets" title="管理试卷库"><span class="glyphicon glyphicon-th-list"></span> 试卷库
+                            </a></li><li><a href="/questions" title="管理试题库"><span class="glyphicon glyphicon-th"></span> 试题库
+                            </a></li><li><a href="/qcategorys" title="管理试题类属"><span class="glyphicon glyphicon-align-left"></span> 试题类属
+                            </a></li>
+                        </ul>
+                    </li>
+
+                    <li ng-if="main.loggedIn && main.user.code=='admin'" class="dropdown">
+                        <a href="#" title="设置用户、角色，查看日志信息" class="dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-user"></span> 用户权限
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/users" title="管理用户信息"><span class="glyphicon glyphicon-user"></span> 用户管理
+                            </a></li><li><a href="/roles" title="权限角色管理"><span class="glyphicon glyphicon-tags"></span> 角色管理
+                            </a></li><li><a href="/logs" title="系统操作日志"><span class="glyphicon glyphicon-eye-open"></span> 日志管理
+                            </a></li>
+                        </ul>
+                    </li>
+
+                    <li ng-if="main.loggedIn" class="dropdown">
+                        <a href="/files" title="网络文件管理器">
+                            <span class="glyphicon glyphicon-hdd"></span> 网盘
+                        </a>
+                        <!--<ul class="dropdown-menu">-->
+                            <!--<li><a href="/files" class="glyphicon glyphicon-folder-open"> 文件管理器</a></li>-->
+                            <!--<li class="divider"></li>-->
+                            <!--<li><a href="/files/recycle" class="glyphicon glyphicon-trash"> 回收站</a></li>-->
+                        <!--</ul>-->
+                    </li>
+
+                    <li ng-if="main.loggedIn"><a ng-href="/users/me" title="查看和修改个人信息">
+                        <span class="glyphicon glyphicon-screenshot" ng-cloak>{{main.user.name}}</span>
+                    </a></li>
+                    <li ng-if="main.loggedIn"><a href="#" ng-click="main.doLogout()" title="退出系统">
+                        <span class="glyphicon glyphicon-log-out"></span> 退出
+                    </a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <main class="container">
+            <div ng-view></div>
+        </main>
+
+        <hr class="hidden-print">
+        <footer class="hidden-print">
+            <p><a href="http://wwwdx.csust.edu.cn/pub/cslg/jgsz/yxsz/jsjytxgcxy/" target="_blank">长沙理工大学计算机与通信工程学院</a></p>
+            <p>&copy; 2015 湖南.长沙.云塘. 版权所有. 系统版本：v0.3.22 </p>
+            <a href="http://10.64.70.140/public/shared/tools/Chrome49.exe" download="Chrome49.exe" target="_self"
+                  class="btn btn-xs btn-info"><i class="fa fa-download"></i>Chrome浏览器下载</a></p>
+        </footer>
+
+        <!--<script src="public/app/libs/json2.js"></script>-->
+        <script src="public/bower/angular/angular.min.js"></script>
+        <script src="public/bower/angular-locale_zh-cn/angular-locale_zh-cn.js"></script>
+        <script src="public/bower/angular-animate/angular-animate.min.js"></script>
+        <script src="public/bower/angular-route/angular-route.min.js"></script>
+        <script src="public/bower/angular-file-upload/dist/angular-file-upload.min.js"></script>
+        <script src="public/bower/angular-strap/dist/angular-strap.min.js"></script>
+        <script src="public/bower/angular-strap/dist/angular-strap.tpl.min.js"></script>
+        <script src="public/bower/angular-sanitize/angular-sanitize.min.js"></script>
+        <script src="public/bower/videogular/videogular.js"></script>
+        <script src="public/bower/videogular-controls/vg-controls.js"></script>
+        <script src="public/bower/videogular-overlay-play/vg-overlay-play.js"></script>
+        <script src="public/bower/videogular-poster/vg-poster.js"></script>
+        <script src="public/bower/videogular-buffering/vg-buffering.js"></script>
+        <script src="public/bower/jquery/dist/jquery.min.js"></script>
+        <script src="public/bower/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="public/bower/async/dist/async.js"></script>
+        <script src="public/bower/angular-meditor/dist/meditor.js"></script>
+        <script src="public/bower/angular-tree-control/angular-tree-control.js"></script>
+
+        <!--////////////////////////////////////////////////////////////////////-->
+
+        <script src="public/app/components/checks/ctrl.js"></script>
+        <script src="public/app/components/users/userCtrl.js"></script>
+        <script src="public/app/components/roles/roleCtrl.js"></script>
+        <script src="public/app/components/logs/logCtrl.js"></script>
+        <script src="public/app/components/files/fileCtrl.js"></script>
+        <script src="public/app/components/signs/signCtrl.js"></script>
+        <script src="public/app/components/signgroups/signGroupCtrl.js"></script>
+        <script src="public/app/components/qcategorys/qcategoryCtrl.js"></script>
+        <script src="public/app/components/questions/questionCtrl.js"></script>
+        <script src="public/app/components/sheets/sheetCtrl.js"></script>
+        <script src="public/app/components/examconfigs/examconfigCtrl.js"></script>
+        <script src="public/app/components/exams/examCtrl.js"></script>
+
+        <script src="public/app/libs/caret.js"></script>
+        <script src="public/app/libs/loginCtrl.js"></script>
+        <script src="public/app/libs/homeCtrl.js"></script>
+        <script src="public/app/libs/authService.js"></script>
+        <script src="public/app/libs/utilsService.js"></script>
+        <script src="public/app/libs/baseService.js"></script>
+        <script src="public/app/libs/paginator.js"></script>
+        <script src="public/app/libs/arrayator.js"></script>
+        <script src="public/app/libs/permission.js"></script>
+        <script src="public/app/libs/pCodeService.js"></script>
+        <script src="public/app/libs/contextService.js"></script>
+        <script src="public/app/libs/multidownload.js"></script>
+
+        <script src="public/app/app.routes.js"></script>
+        <script src="public/app/app.js"></script>
+    </body>
+</html>
