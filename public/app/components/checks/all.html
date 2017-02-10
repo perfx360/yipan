@@ -1,0 +1,167 @@
+<div class="page-header">
+    <h1>
+        抽查列表
+        <a href="/checks/create" class="btn btn-primary hidden-print"
+           ng-if="main.user.code=='admin'">
+            <span class="glyphicon glyphicon-plus"></span>
+            发起新抽查
+        </a><a href="/signgroups" class="btn btn-default hidden-print"
+           ng-if="main.user.code=='admin'">
+            <span class="glyphicon glyphicon-list"></span>
+            查看签到对象列表
+        </a>
+    </h1>
+</div>
+
+<!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+<div class="row show-hide-message hidden-print" ng-if="ctrl.paginator.message">
+    <div class="col-sm-12">
+        <!-- -->
+        <div class="alert alert-success" ng-if="ctrl.paginator.isSuccess">
+            {{ ctrl.paginator.message }}
+        </div>
+        <div class="alert alert-danger" ng-if="!ctrl.paginator.isSuccess">
+            {{ ctrl.paginator.message }}
+        </div>
+
+    </div>
+</div>
+
+<div class="jumbotron text-center hidden-print" ng-if="ctrl.paginator.processing">
+    <span class="glyphicon glyphicon-repeat spinner"></span>
+    <p>正在加载抽查信息 ...</p>
+</div>
+
+<div ng-if="main.user.code=='admin'">
+    <!--分页栏，仅在数据行大于一页时出现-->
+    <!--注意这里不能全部用一次性绑定，因为页码会动态改变-->
+    <ul class="nav pagination col-sm-6 hidden-print" ng-if="ctrl.paginator.items">
+        <li ng-repeat="pagnav in ctrl.paginator.items" class="{{pagnav.class}}"
+            title="{{::pagnav.tooltip}}">
+            <a ng-click="ctrl.paginator.page(pagnav.pageIndex)">{{pagnav.label }}</a>
+        </li>
+        <span> </span>
+        <div class="input-group" ng-if="ctrl.paginator.needGotoPage">
+            <span class="input-group-addon">第</span>
+            <input type="text" class="form-control" placeholder="页码"
+                   ng-model="ctrl.paginator.givenPageGoto"
+                   ng-keypress="ctrl.paginator.goto($event)">
+            <span class="input-group-addon">页 </span>
+            <span> </span>
+            <span class="input-group-addon">每页</span>
+            <input type="text" class="form-control" placeholder="行数"
+                   ng-model="ctrl.paginator.givenPageSize"
+                   ng-keypress="ctrl.paginator.setPageSize($event)">
+            <span class="input-group-addon">行</span>
+        </div>
+        <div class="input-group" ng-if="!ctrl.paginator.needGotoPage">
+            <span class="input-group-addon">每页</span>
+            <input type="text" class="form-control" placeholder="行数"
+                   ng-model="ctrl.paginator.givenPageSize"
+                   ng-keypress="ctrl.paginator.setPageSize($event)">
+            <span class="input-group-addon">行</span>
+        </div>
+    </ul>
+
+    <!--筛选框，收集关键字，以空格为分割-->
+    <ul class="nav pagination col-sm-6 hidden-print" ng-if="ctrl.paginator.showFilter">
+        <div class="input-group">
+            <span class="input-group-addon">筛选</span>
+            <input type="text" class="form-control"
+                   placeholder="筛选关键字,用空格分隔"
+                   ng-model="ctrl.paginator.keywords"
+                   ng-keypress="ctrl.paginator.filter($event)">
+            <span class="input-group-addon glyphicon glyphicon-remove"
+                  title="清除筛选结果"
+                  ng-click="ctrl.paginator.clearFilter()"></span>
+        </div>
+    </ul>
+
+    <!-- 如果当前控制器的对象有内容，就以列表的方式显示 -->
+    <table class="table table-bordered table-striped" ng-if="ctrl.paginator.data">
+        <thead>
+        <!-- 表头部分 -->
+        <tr>
+            <th class="col-sm-1 hidden-print">序号<span class="badge">{{ctrl.paginator.resultCount}}</span></th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.paginator.sort('owner')"
+                   title="单击按发起者排序，再次单击反序">发起者</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.paginator.sort('create')"
+                   title="单击按发起时间排序，再次单击反序">发起时间</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.paginator.sort('signgroup')"
+                   title="单击按对象排序，再次单击反序">签到对象</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.paginator.sort('isAccumulated')"
+                   title="单击按是否新开的抽查排序，再次单击反序">新抽查</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.paginator.sort('numExpected')"
+                   title="单击按设计抽查人数排序，再次单击反序">设计抽查人数</a>
+            </th><th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.paginator.sort('numReal')"
+                   title="单击按实际抽查人数排序，再次单击反序">实际抽查人数</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.paginator.sort('remark')"
+                                                 title="单击按备注排序，再次单击反序">备注</a>
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选备注"
+                        ng-click="ctrl.paginator.showCustomFilter('remark')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.remark.show">
+                    <input type="text" placeholder="筛选备注关键字"
+                           ng-model="ctrl.paginator.customFilter.remark.value"
+                           ng-keypress="ctrl.paginator.filter($event)">
+                    <span class="glyphicon glyphicon-remove"
+                          title="清除自定义筛选结果"
+                          ng-click="ctrl.paginator.clearFilter('remark','value')"></span>
+                </div>
+            </th>
+            <th class="col-sm-2 hidden-print">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- 表的主体部分，对每一个用户对象来循环 -->
+        <tr ng-repeat="r in ctrl.paginator.data">
+            <td>{{:: $index+1+((ctrl.paginator.current-1)*ctrl.paginator.pageSize) }}</td>
+            <td>{{:: r.owner.name }}</td>
+            <td>{{:: r.create | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+            <td>{{:: r.signgroup.name }}</td>
+            <td ng-if="r.isAccumulated"></td>
+            <td ng-if="!r.isAccumulated">新</td>
+            <td>{{:: r.numExpected}}</td>
+            <td>{{:: r.numReal }}</td>
+            <td>{{:: r.remark }}</td>
+            <!-- 每一行末尾显示修改和删除两个选择 -->
+            <td>
+                <!-- 修改操作对应了一个angular的路由映射到/ctrl.paginator./:role_id上面去 -->
+                <a ng-href="/checks/{{:: r._id }}" class="btn btn-primary"
+                    title = '查看该抽查的明细，添加新批注信息'
+                >明细</a>
+                <a href="#" ng-click="ctrl.paginator.modalDelete(r)" class="btn btn-danger">删除</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Modal Markup kept out of all the div elements -->
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">你确定要删除该抽查吗？</h4>
+                    <h6 class="modal-title">{{ctrl.paginator.deleteId}}</h6>
+                </div>
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <h3>{{ctrl.paginator.deleteMessage}}</h3>
+                </div>
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal" ng-click="ctrl.paginator.delete()">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,79 @@
+<!-- 当个用户的视图，提供修改和新增两种功能  -->
+<div class="page-header">
+    <!-- 根据提供的操作类型user.type，决定显示哪个标题 -->
+    <h1 ng-if="ctrl.type == 'create'">新建试题类属</h1>
+    <h1 ng-if="ctrl.type == 'edit'">修改试题类属</h1>
+</div>
+
+<!--
+    定义一个表单，对应的处理办法是当前控制器定义的saveUser方法
+    由于修改和新增操作指定的控制器不同，saveUser方法也有不同实现
+ -->
+<form name='editForm' ng-if="main.user.code=='admin'" class="form-horizontal" ng-submit="ctrl.save(editForm)" novalidate>
+    <!-- 用户名 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">名称</label>
+
+        <div class="col-sm-6">
+            <input type="text" class="form-control" name="name" ng-model="ctrl.data.name"
+                   ng-minlength="2" ng-required="true"
+                   ng-model-options="{updateOn: 'blur'}"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="签到名称，必填项，至少2位"
+                   placeholder="必填项，至少2位">
+            <span class="error-message" ng-if="editForm.name.$dirty && editForm.name.$error.required">
+                必填项</span>
+            <span class="error-message" ng-if="editForm.name.$dirty && editForm.name.$error.minlength">
+                长度至少2位</span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">备注</label>
+        <div class="col-sm-6">
+            <input type="text" class="form-control" name="remark" ng-model="ctrl.data.remark"
+                   title="试卷类属的备注信息">
+        </div>
+    </div>
+
+    <!-- 根据操作类型显示不同的提交按钮标签 -->
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-3">
+            <a ng-href="/qcategorys" class="btn btn-info btn-lg btn-block">返回列表</a>
+        </div>
+        <div class="col-sm-3">
+            <!-- 后台加载过程结束了，就显示按钮可点击的状态，加载过程可能是加载显示数据，如角色列表，
+                或者是点击新建后的提交动作，这样可以避免重复提交 -->
+            <button type="submit" class="btn btn-success btn-lg btn-block"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && !ctrl.processing">
+                新建</button>
+            <!--正在加载，就显示一个繁忙图标-->
+            <button type="submit" class="btn btn-success btn-lg btn-block disabled"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && ctrl.processing">
+                新建<span class="glyphicon glyphicon-repeat"></span></button>
+            <button type="submit" class="btn btn-success btn-lg btn-block"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type !== 'create' && !ctrl.processing">
+                修改</button>
+            <!--正在加载，就显示一个繁忙图标-->
+            <button type="submit" class="btn btn-success btn-lg btn-block disabled"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type !== 'create' && ctrl.processing">
+                修改<span class="glyphicon glyphicon-repeat"></span></button>
+        </div>
+    </div>
+
+</form>
+
+<!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+<div class="row show-hide-message" ng-if="ctrl.message">
+    <div class="col-sm-6 col-sm-offset-2">
+        <!-- -->
+        <div class="alert alert-success" ng-if="ctrl.isSuccess">
+            {{ ctrl.message }}
+        </div>
+        <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+            {{ ctrl.message }}
+        </div>
+
+    </div>
+</div>

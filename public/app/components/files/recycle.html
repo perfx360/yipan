@@ -1,0 +1,113 @@
+<div class="page-header">
+	<h1>
+		回收站
+	</h1>
+</div>
+
+<div class="row" ng-show="!ctrl.progressing">
+    <div class="btn-toolbar col-sm-12">
+        <div class="btn-group">
+            <button class="btn btn-default btn-sm" title="刷新回收站" ng-click="ctrl.refresh()"><i class="fa fa-refresh fa-spin" ng-show="ctrl.processing"></i><i class="fa fa-refresh" ng-show="!ctrl.processing"></i>刷新</button>
+            <button class="btn btn-default btn-sm" title="删除选定的{{ctrl.numSelectedFiles}}个文件和{{ctrl.numSelectedDirs}}个文件夹" ng-click="ctrl.modalDelete()"><span class="glyphicon glyphicon-remove"></span>删除</button>
+            <button class="btn btn-default btn-sm" title="还原选定的{{ctrl.numSelectedFiles}}个文件和{{ctrl.numSelectedDirs}}个文件夹" ng-click="ctrl.restore()"><span class="glyphicon glyphicon-new-window"></span>还原</button>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-default btn-sm" title="选中当前位置下所有的文件" ng-click="ctrl.select(1)"><span class="glyphicon glyphicon-ok-sign"></span>全选</button>
+            <button class="btn btn-default btn-sm" title="不选当前位置下所有的文件" ng-click="ctrl.select(0)"><span class="glyphicon glyphicon-remove-sign"></span>全不选</button>
+            <button class="btn btn-default btn-sm" title="只选当前没有选中的文件" ng-click="ctrl.select(-1)"><span class="glyphicon glyphicon-retweet"></span>反选</button>
+        </div>
+    </div>
+</div>
+
+<table class="table table-striped" ng-show="!ctrl.progressing">
+    <thead>
+    <!-- 表头部分 -->
+    <tr>
+        <th >序号<span class="badge">{{ctrl.paginator.data.length}}</span></th>
+        <th ><a ng-href="#" ng-click="ctrl.paginator.sort('name')" title="单击按名称排序，再次单击反序">名称</a>
+            <button type="button" class="btn btn-default btn-xs" title="自定义筛选名称" ng-click="ctrl.paginator.showCustomFilter('name')">
+                <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+            </button>
+            <div ng-if="ctrl.paginator.customFilter.name.show">
+                <input type="text" placeholder="筛选名称关键字" ng-model="ctrl.paginator.customFilter.name.value" ng-keypress="ctrl.filter($event)">
+                    <span class="glyphicon glyphicon-remove" title="清除自定义筛选结果" ng-click="ctrl.paginator.clearFilter('name','value')"></span>
+            </div>
+        </th>
+        <th ><a ng-href="#" ng-click="ctrl.paginator.sort('extension')" title="单击按类型排序，再次单击反序">类型</a>
+            <button type="button" class="btn btn-default btn-xs" title="自定义筛选类型" ng-click="ctrl.paginator.showCustomFilter('extension')">
+                <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+            </button>
+            <div ng-if="ctrl.paginator.customFilter.extension.show">
+                <button type="button" class="btn btn-xs btn-default" ng-model="ctrl.paginator.customFilter.extension.value" ng-change="ctrl.filter()" data-multiple="1" data-placeholder = "请选择类型" bs-options="r.name as r.label for r in ctrl.extensions" bs-select>
+                </button>
+            </div>
+        </th>
+        <th ><a ng-href="#" ng-click="ctrl.paginator.sort('size')" title="单击按大小排序，再次单击反序">大小</a>
+            <button type="button" class="btn btn-default btn-xs" title="自定义筛选大小" ng-click="ctrl.paginator.showCustomFilter('size')">
+                <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+            </button>
+            <div ng-if="ctrl.paginator.customFilter.size.show">
+                <input type="number" title="起始文件大小(单位b)" ng-model="ctrl.paginator.customFilter.size.value">
+                <span class="glyphicon glyphicon-ok" title="执行文件大小筛选" ng-click="ctrl.filter()"></span>
+                <input type="number" min="0" title="截至文件大小(单位b)" ng-model="ctrl.paginator.customFilter.size.value1">
+            </div>
+        </th>
+        <th ><a ng-href="#" ng-click="ctrl.paginator.sort('modified')" title="单击按最后删除日期排序，再次单击反序">删除日期</a>
+            <button type="button" class="btn btn-default btn-xs" title="自定义筛选删除日期" ng-click="ctrl.paginator.showCustomFilter('modified')">
+                <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+            </button>
+            <div ng-if="ctrl.paginator.customFilter.modified.show">
+                <input type="date" title="设置起始日期" ng-model="ctrl.paginator.customFilter.modified.value">
+                <input type="time" title="设置起始时间" ng-model="ctrl.paginator.customFilter.modified.value1">
+                    <span class="glyphicon glyphicon-ok" title="执行日期时间筛选" ng-click="ctrl.filter()"></span>
+                <br>
+                <input type="date" title="设置截止日期" ng-model="ctrl.paginator.customFilter.modified.value2">
+                <input type="time" title="设置截止时间" ng-model="ctrl.paginator.customFilter.modified.value3">
+            </div>
+        </th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 表的主体部分，对每一个用户对象来循环 -->
+    <tr ng-repeat="r in ctrl.paginator.data" ng-class="(r.selected)?'danger':''">
+        <td ng-click="ctrl.setSelection($index, $event)">{{ $index+1}}</td>
+        <td ng-if="r.isFile" ng-click="ctrl.setSelection($index, $event)">
+            <label>{{ r.name }}</label>
+        </td>
+        <td ng-if="!r.isFile">
+            <label class="btn btn-warning btn-xs btn-block" ng-click="ctrl.setSelection($index, $event)">{{ r.name }}
+            </label>
+        </td>
+        <td  ng-click="ctrl.setSelection($index, $event)"><label title="文件扩展名:{{r.extension}}"><i ng-class="'fa fa-' + r.icon"></i></label></td>
+        <td  ng-click="ctrl.setSelection($index, $event)"><label title="文件大小{{r.size}}字节">{{r.sizeB}}</label></td>
+        <td  ng-click="ctrl.setSelection($index, $event)">{{ r.isDelete | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+        <td>
+            <a ng-click="ctrl.modalDelete(r)" class="btn btn-xs btn-danger"><i class="fa fa-remove"></i>删除</a>
+            <a class="btn btn-xs btn-info" ng-click="ctrl.restore(r)"><i class="fa fa-download"></i>还原</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="modal fade" id="modalDelete">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">你确认要从回收站永久删除{{ctrl.deleteInfo.title}}吗？</h4>
+                <h6 class="modal-title" ng-if="ctrl.deleteInfo.subtitle">{{ctrl.deleteInfo.subtitle}}</h6>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <h2 title="{{ctrl.deleteInfo.detail}}">{{ctrl.deleteInfo.detailShort}}</h2 >
+            </div>
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal" ng-click="ctrl.delete()">删除</button>
+            </div>
+        </div>
+    </div>
+</div>

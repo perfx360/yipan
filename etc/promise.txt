@@ -1,0 +1,61 @@
+《JavaScript with Promises avxhome.se.pdf》
+
+关键代码片段：
+
+'use strict';
+var Q = require('kew');
+var i = 0;
+
+function log(data) {console.log('%d %s', ++i, data); };
+
+// Asynchronous fn returns a promise
+function async(arg) {
+    var deferred = Q.defer();
+    setTimeout(function () {
+        deferred.resolve('result ' + arg);\
+    }, 1000);
+    return deferred.promise;
+};
+
+// Flattened promise chain
+function validate() {
+    log("Wait for it ...");
+    async('first').then(function(resp){
+        log(resp);
+        return async('second');
+    })
+    .then(function(resp){
+        log(resp);
+        return async('third')
+    })
+    .then(function(resp){
+        log(resp);
+        return async('fourth');
+    })
+    .then(function(resp){
+        log(resp);
+    }).fail(log);
+};
+validate();
+
+var failure = new Promise(function (resolve, reject) {
+    setTimeout(function () {
+        resolve(data);
+        reject(new Error('Unable to fetch data in allotted time'));
+    }, timeAllowed);
+});
+
+         Promise.then(
+         function step2() {
+console.log('This is never run');
+}
+         ).then(
+         function step3() {
+console.log('This is also never run');
+}
+         ).catch(
+         function (error) {
+console.log('Something failed along the way. Inspect error for more info.');
+console.log(error); // Error object with message: 'bad news'
+}
+         );

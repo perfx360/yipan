@@ -1,0 +1,327 @@
+<div class="page-header">
+    <h1 ng-if="!ctrl.isMoveTo">
+        文件管理器
+    </h1><h1 ng-if="ctrl.isMoveTo">
+        移动到...
+        <button type="button" class="btn btn-danger btn-lg" title="取消移动，返回文件管理器" ng-click="ctrl.moveExit()">
+            <span class="glyphicon glyphicon-log-out"></span> 返回
+        </button>
+        <button type="button" class="btn btn-success btn-lg" title="将选定的{{ctrl.move.files}}个文件和{{ctrl.move.dirs}}个文件夹移动到当前目录" ng-click="ctrl.moveTo()" ng-disabled="!ctrl.isValidPastePath">
+            <span class="glyphicon glyphicon-log-in"></span> 移动到这里
+        </button>
+    </h1>
+</div>
+
+<div ng-show="ctrl.progressing">
+    <h4>总进度: 已完成{{ctrl.ccp.todosFinished}}个/共{{ctrl.ccp.todosTotal}}个文件(夹)</h4>
+    <div class="progress" style="">
+        <div class="progress">
+            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{ctrl.ccp.progress}}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: {{ctrl.ccp.progress}}%;">
+                {{ctrl.ccp.progress}}%
+            </div>
+        </div>
+    </div>
+    <button class="btn btn-primary btn-lg col-sm-12" title="取消当前的操作" ng-click="ctrl.pasteConfig.userInterruptted = true;"><i class="fa fa-remove"></i>取消</button>
+</div>
+
+
+<div class="row" ng-show="!ctrl.progressing">
+    <div class="btn-toolbar col-sm-3">
+        <div class="btn-group">
+            <button class="btn btn-sm btn-info" title="返回上一步位置:{{ctrl.pathHistory[ctrl.pathHistoryIndex-1]}}" ng-click="ctrl.goBack()" ng-disabled="ctrl.pathHistoryIndex<1">
+                <span class="glyphicon glyphicon-arrow-left">返回</span>
+            </button>
+            <button class="btn btn-sm btn-primary" title="退到上一级目录:{{ctrl.paths[ctrl.paths.length-2].path}}" ng-click="ctrl.goUp()" ng-disabled="ctrl.currentDir.length<2">
+                <span class="glyphicon glyphicon-arrow-up">上级</span>
+            </button>
+            <button class="btn btn-sm btn-info" title="前进下一步位置:{{ctrl.pathHistory[ctrl.pathHistoryIndex+1]}}" ng-click="ctrl.goForward()" ng-disabled="ctrl.pathHistoryIndex>(ctrl.pathHistory.length-2)">
+                <span class="glyphicon glyphicon-arrow-right">前进</span>
+            </button>
+        </div>
+    </div>
+    <div class="col-sm-9">
+        <ol class="breadcrumb">
+            当前位置：
+            <li ng-repeat="path in ctrl.paths">
+                <a ng-click="ctrl.changeCurrentDir(path.path, false, null, true)" ng-if="path.isItem">{{path.label}}</a>
+                <!--//不是直接路径，就肯定是路径的数组，显示为下拉列表模式-->
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" ng-if="!path.isItem">
+                    ...
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu" ng-if="!path.isItem">
+                    <li ng-repeat="subPath in path.path">
+                        <a ng-click="ctrl.changeCurrentDir(subPath.path, false, null, true)">{{subPath.label}}</a>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+    <div class="btn-toolbar col-sm-12" ng-show="!ctrl.isMoveTo">
+        <div class="btn-group">
+            <button class="btn btn-default btn-sm" title="上传文件到当前目录" ng-click="ctrl.upload()" ng-disabled="!ctrl.isWorkingDir"><i class="fa fa-cloud-upload"></i>上传</button>
+            <button class="btn btn-default btn-sm" title="批量下载选中的{{ctrl.numSelectedFiles}}个文件" ng-click="ctrl.multiDownload()" ng-disabled="ctrl.numSelectedFiles==0"><i class="fa fa-cloud-download"></i>下载</button>
+            <button class="btn btn-default btn-sm" title="刷新当前目录" ng-click="ctrl.refresh()"><i class="fa fa-refresh fa-spin" ng-show="ctrl.processing"></i><i class="fa fa-refresh" ng-show="!ctrl.processing"></i>刷新</button>
+            <button class="btn btn-default btn-sm" title="删除选定的{{ctrl.numSelectedFiles}}个文件和{{ctrl.numSelectedDirs}}个文件夹" ng-click="ctrl.modalDelete()" ng-disabled="!ctrl.isWorkingDir || (ctrl.numSelectedDirs==0 && ctrl.numSelectedFiles==0)"><span class="glyphicon glyphicon-remove"></span>删除</button>
+            <button class="btn btn-default btn-sm" title="在当前目录新建文件夹" ng-click="ctrl.createDir()" ng-disabled="!ctrl.isWorkingDir"><span class="glyphicon glyphicon-new-window"></span>新建</button>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-default btn-sm" title="将选定的{{ctrl.numSelectedFiles}}个文件和{{ctrl.numSelectedDirs}}个文件夹移动到其他位置" ng-click="ctrl.move()" ng-disabled="!ctrl.isWorkingDir || (ctrl.numSelectedDirs==0 && ctrl.numSelectedFiles==0)"><span class="glyphicon glyphicon-move"></span>移动</button>
+            <button class="btn btn-default btn-sm" title="复制选定的{{ctrl.numSelectedFiles}}个文件和{{ctrl.numSelectedDirs}}个文件夹" ng-click="ctrl.copyCut(false)" ng-disabled="ctrl.numSelectedDirs==0 && ctrl.numSelectedFiles==0"><i class="fa fa-copy"></i>复制</button>
+            <button class="btn btn-default btn-sm" title="剪切选定的{{ctrl.numSelectedFiles}}个文件和{{ctrl.numSelectedDirs}}个文件夹" ng-click="ctrl.copyCut(true)" ng-disabled="!ctrl.isWorkingDir || (ctrl.numSelectedDirs==0 && ctrl.numSelectedFiles==0)"><span class="glyphicon glyphicon-scissors"></span>剪切</button>
+            <button class="btn btn-default btn-sm" title="粘贴选定的{{ctrl.ccp.files}}个文件和{{ctrl.ccp.dirs}}个文件夹到这里" ng-click="ctrl.paste()" ng-disabled="!ctrl.isWorkingDir || ctrl.ccp.selections.length==0 || !ctrl.isValidPastePath"><i class="fa fa-paste"></i>粘贴</button>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-default btn-sm" title="选中当前位置下所有的文件" ng-click="ctrl.select(1)"><span class="glyphicon glyphicon-ok-sign"></span>全选</button>
+            <button class="btn btn-default btn-sm" title="不选当前位置下所有的文件" ng-click="ctrl.select(0)"><span class="glyphicon glyphicon-remove-sign"></span>全不选</button>
+            <button class="btn btn-default btn-sm" title="只选当前没有选中的文件" ng-click="ctrl.select(-1)"><span class="glyphicon glyphicon-retweet"></span>反选</button>
+        </div>
+        <div class="btn-group col-sm-2">
+            <input type="text" placeholder="输入任意内容进行模糊搜索" ng-model="ctrl.paginator.vagueFind" >
+        </div>
+    </div>
+</div>
+
+<table class="table table-striped" ng-show="!ctrl.progressing">
+    <thead>
+    <!-- 表头部分 -->
+    <tr>
+        <th >序号<span class="badge">{{ctrl.paginator.data.length}}</span></th>
+        <th ><a ng-href="#" ng-click="ctrl.paginator.sort('name')" title="单击按名称排序，再次单击反序">名称</a>
+            <button type="button" class="btn btn-default btn-xs" title="自定义筛选名称" ng-click="ctrl.paginator.showCustomFilter('name')">
+                <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+            </button>
+            <div ng-if="ctrl.paginator.customFilter.name.show">
+                <input autofocus="autofocus" type="text" placeholder="筛选名称关键字" ng-model="ctrl.paginator.customFilter.name.value" ng-keypress="ctrl.filter($event)">
+                    <span class="glyphicon glyphicon-remove" title="清除自定义筛选结果" ng-click="ctrl.paginator.clearFilter('name','value')">
+                    </span>
+            </div>
+        </th>
+        <th ><a ng-href="#" ng-click="ctrl.paginator.sort('extension')" title="单击按类型排序，再次单击反序">类型</a>
+            <button type="button" class="btn btn-default btn-xs" title="自定义筛选类型" ng-click="ctrl.paginator.showCustomFilter('extension')">
+                <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+            </button>
+            <div ng-if="ctrl.paginator.customFilter.extension.show">
+                <button type="button" class="btn btn-xs btn-default" ng-model="ctrl.paginator.customFilter.extension.value" ng-change="ctrl.filter()" data-multiple="1" data-placeholder = "请选择类型" bs-options="r.name as r.label for r in ctrl.extensions" bs-select>
+                </button>
+            </div>
+        </th>
+        <th ><a ng-href="#" ng-click="ctrl.paginator.sort('size')" title="单击按大小排序，再次单击反序">大小</a>
+            <button type="button" class="btn btn-default btn-xs" title="自定义筛选大小" ng-click="ctrl.paginator.showCustomFilter('size')">
+                <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+            </button>
+            <div ng-if="ctrl.paginator.customFilter.size.show">
+                <input type="number" title="起始文件大小(单位b)" ng-model="ctrl.paginator.customFilter.size.value">
+                <span class="glyphicon glyphicon-ok" title="执行文件大小筛选" ng-click="ctrl.filter()"></span>
+                <input type="number" min="0" title="截至文件大小(单位b)" ng-model="ctrl.paginator.customFilter.size.value1">
+            </div>
+        </th>
+        <th ><a ng-href="#" ng-click="ctrl.paginator.sort('lastModified')" title="单击按最后修改日期排序，再次单击反序">变动日期</a>
+            <button type="button" class="btn btn-default btn-xs" title="自定义筛选修改日期" ng-click="ctrl.paginator.showCustomFilter('lastModified')">
+                <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+            </button>
+            <div ng-if="ctrl.paginator.customFilter.lastModified.show">
+                <input type="date" title="设置起始日期" ng-model="ctrl.paginator.customFilter.lastModified.value">
+                <input type="time" title="设置起始时间" ng-model="ctrl.paginator.customFilter.lastModified.value1">
+                    <span class="glyphicon glyphicon-ok" title="执行日期时间筛选" ng-click="ctrl.filter()"></span>
+                <br>
+                <input type="date" title="设置截止日期" ng-model="ctrl.paginator.customFilter.lastModified.value2">
+                <input type="time" title="设置截止时间" ng-model="ctrl.paginator.customFilter.lastModified.value3">
+            </div>
+        </th>
+        <th ><a ng-href="#" ng-click="ctrl.paginator.sort('username')" title="单击按大小排序，再次单击反序">最近操作者</a>
+            <button type="button" class="btn btn-default btn-xs" title="自定义筛选修改人" ng-click="ctrl.paginator.showCustomFilter('username')">
+                <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+            </button>
+            <div ng-if="ctrl.paginator.customFilter.username.show">
+                <button type="button" class="btn btn-xs btn-default" ng-model="ctrl.paginator.customFilter.username.value" ng-change="ctrl.filter()" data-multiple="1" data-placeholder = "请选择修改人" bs-options="r.name as r.name for r in ctrl.users" bs-select>
+                </button>
+            </div>
+        </th>
+        <th ng-show="!ctrl.isMoveTo">操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 表的主体部分，对每一个用户对象来循环 -->
+    <tr ng-repeat="r in ctrl.paginator.data | filter:ctrl.paginator.vagueFind | orderBy:['isFile',ctrl.paginator.sortCol] track by $index" ng-class="(r.selected)?'danger':''">
+        <td ng-click="ctrl.setSelection(r, $event)">{{ $index+1}}</td>
+        <td ng-if="r.isFile" ng-click="ctrl.enterPathDbl(r)">
+            <label title="{{r.fullname}}">{{ r.name }}</label>
+        </td>
+        <td ng-if="!r.isFile">
+            <label class="btn btn-warning btn-xs btn-block" ng-click="ctrl.enterPath(r.name)" title='进入"{{r.name}}"文件夹'>{{ r.name }}
+            </label>
+        </td>
+        <td  ng-click="ctrl.setSelection(r, $event)" ng-dblclick="ctrl.enterPathDbl(r)"><label title="文件扩展名:{{r.extension}}"><i ng-class="'fa fa-' + r.icon"></i></label></td>
+        <td  ng-click="ctrl.setSelection(r, $event)" ng-dblclick="ctrl.enterPathDbl(r)"><label title="文件大小{{r.size}}字节">{{r.sizeB}}</label></td>
+        <td  ng-click="ctrl.setSelection(r, $event)" ng-dblclick="ctrl.enterPathDbl(r)">{{ r.lastModified | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+        <td  ng-click="ctrl.setSelection(r, $event)" ng-dblclick="ctrl.enterPathDbl(r)">{{ r.username }}</td>
+        <td  ng-show="!ctrl.isMoveTo">
+            <a ng-click="ctrl.showHistory(r)" class="btn btn-xs btn-primary"><i class="fa fa-history"></i>历史</a>
+            <a href="#" ng-click="ctrl.modalDelete(r)" class="btn btn-xs btn-danger" ng-if="ctrl.isWorkingDir"><i class="fa fa-remove"></i>删除</a>
+            <a href="#" ng-click="ctrl.rename(r)" class="btn btn-xs btn-default" ng-if="ctrl.isWorkingDir"><i class="fa fa-edit"></i>改名</a>
+            <a href="public/uploads/{{r.fname}}" download="{{r.fullname}}" target="_self"
+               class="btn btn-xs btn-info" ng-click="ctrl.recordDownload(r)" ng-show="r.isFile"><i class="fa fa-download"></i>下载</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="modal fade" id="modalDelete">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">你确认删除{{ctrl.deleteInfo.title}}吗？</h4>
+                <h6 class="modal-title" ng-if="ctrl.deleteInfo.subtitle">{{ctrl.deleteInfo.subtitle}}</h6>
+            </div>
+            <div class="modal-body">
+                <h4 title="{{ctrl.deleteInfo.detail}}">{{ctrl.deleteInfo.detailShort}}</h4 >
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal" ng-click="ctrl.delete()">删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalPaste">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{ctrl.pasteInfo.type}}过程中发现重名文件：</h4>
+                <h6 class="modal-title">已经完成{{ctrl.pasteInfo.type}}{{ctrl.idsToBeSelected.length}}个文件(夹)</h6>
+            </div>
+            <div class="modal-body">
+                <h2>重名文件名 = {{ctrl.pasteConfig.fullname}}</h2>
+            </div>
+            <div class="modal-footer">
+                <div class="btn-group">
+                    <button class="btn btn-info btn-sm" data-dismiss="modal" title="本次及之后发现重名一律用新文件覆盖" ng-click="ctrl.pasteModal('overWrite')"><i class="fa fa-clipboard"></i>全部覆盖</button>
+                    <button class="btn btn-info btn-sm" data-dismiss="modal" title="本次及之后发现重名一律新文件重命名" ng-click="ctrl.pasteModal('needRename')"><i class="fa fa-edit"></i>全部改名</button>
+                    <button class="btn btn-info btn-sm" data-dismiss="modal" title="本次及之后发现重名一律跳过" ng-click="ctrl.pasteModal('skip')"><i class="fa fa-share"></i>全部跳过</button>
+                </div>
+                <button type="button" class="btn btn-warning btn-sm" data-dismiss="modal" ng-click="ctrl.pasteCancel()"><i class="fa fa-sign-out">取消</i></button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalHistory">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">文件修改历史记录：</h4>
+                <h6 class="modal-title">
+                    ID= {{ctrl.history._id}}，文件名= {{ctrl.history.fullname}}，位置= {{ctrl.currentDir}}
+                </h6>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th >序号<span class="badge">{{ctrl.history.history.length}}</span></th>
+                        <th >用户</th>
+                        <th >日期</th>
+                        <th >类型</th>
+                        <th >备注</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="r in ctrl.history.history">
+                        <td >{{ $index+1}}</td>
+                        <td >{{ r.username}}</td>
+                        <td >{{ r.date | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+                        <td >{{ r.typename}}</td>
+                        <td >{{ r.remark}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalShowGif">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h3 class="modal-title">{{ctrl.showFile.name}}</h3>
+                <h6 class="modal-title">ID= {{ctrl.showFile._id}}， 大小= {{ctrl.showFile.sizeB}}， 类型= {{ctrl.showFile.extension}}， 位置= {{ctrl.showFile.path}}</h6>
+            </div>
+            <div class="modal-body">
+                <p>
+                <div align="center">
+                    <img src={{ctrl.showFile.rpath}} style="max-width:100%; height:auto;" />
+                </div>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalShowImage">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h3 class="modal-title">{{ctrl.showFile.name}}</h3>
+                <h6 class="modal-title">ID= {{ctrl.showFile._id}}， 大小= {{ctrl.showFile.sizeB}}， 类型= {{ctrl.showFile.extension}}， 位置= {{ctrl.showFile.path}}</h6>
+            </div>
+            <div class="modal-body">
+                <input type="range" id="scale-range" min="0.5" max="3.0" step="0.01" value="1.0" style="display:block;margin:10px auto;width:320px"/>
+                <canvas id="canvas" style="display:block;margin:0 auto;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalShowTxt">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h3 class="modal-title">{{ctrl.showFile.name}}</h3>
+                <h6 class="modal-title">ID= {{ctrl.showFile._id}}， 大小= {{ctrl.showFile.sizeB}}， 类型= {{ctrl.showFile.extension}}， 位置= {{ctrl.showFile.path}}</h6>
+            </div>
+            <div class="modal-body thumbnail">
+                <td height="80" align="left" valign="top" class="t2"><pre style="word-wrap: break-word; white-space: pre-wrap; white-space: -moz-pre-wrap">{{ctrl.showFile.text}}</pre></td>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalShowMusic">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" ng-click="ctrl.showFile.load()" class="close" data-dismiss="modal">&times;</button>
+                <h3 class="modal-title">{{ctrl.showFile.name}}</h3>
+                <h6 class="modal-title">ID= {{ctrl.showFile._id}}， 大小= {{ctrl.showFile.sizeB}}， 类型= {{ctrl.showFile.extension}}， 位置= {{ctrl.showFile.path}}</h6>
+            </div>
+            <div class="modal-body">
+                <audio id="myAudio" src={{ctrl.showFile.rpath}} controls="controls" preload="preload" style="clear:both;display:block;margin:auto"></audio>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalShowPdf">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h3 class="modal-title">{{ctrl.showFile.name}}</h3>
+                <h6 class="modal-title">ID= {{ctrl.showFile._id}}， 大小= {{ctrl.showFile.sizeB}}， 类型= {{ctrl.showFile.extension}}， 位置= {{ctrl.showFile.path}}</h6>
+            </div>
+            <div class="modal-body thumbnail">
+                 <embed type="application/pdf" src={{ctrl.showFile.rpath}} class="txtarea" width="100%" height="450">
+            </div>
+        </div>
+    </div>
+</div>

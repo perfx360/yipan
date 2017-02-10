@@ -1,0 +1,209 @@
+<div class="page-header">
+    <h1>
+        考试试卷列表
+        <a ng-href="#" ng-click="ctrl.exportExams()" class="btn btn-primary"
+            ng-if="main.user.code=='admin' && ctrl.paginator.data.length>0">
+            <i class="glyphicon glyphicon-export"></i>
+            导出到文件
+        </a>
+        <a ng-href="#" ng-click="ctrl.paginator.filter();" class="btn btn-primary">
+            <i class="fa fa-refresh"></i>
+            刷新
+        </a>
+    </h1>
+</div>
+
+<!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+<div class="row show-hide-message hidden-print" ng-if="ctrl.paginator.message">
+    <div class="col-sm-12">
+        <!-- -->
+        <div class="alert alert-success" ng-if="ctrl.paginator.isSuccess">
+            {{ ctrl.paginator.message }}
+        </div>
+        <div class="alert alert-danger" ng-if="!ctrl.paginator.isSuccess">
+            {{ ctrl.paginator.message }}
+        </div>
+
+    </div>
+</div>
+
+<div class="jumbotron text-center hidden-print" ng-if="ctrl.paginator.processing">
+    <span class="glyphicon glyphicon-repeat spinner"></span>
+    <p>正在加载考试试卷信息 ...</p>
+</div>
+
+<div>
+    <!--分页栏，仅在数据行大于一页时出现-->
+    <!--注意这里不能全部用一次性绑定，因为页码会动态改变-->
+    <ul class="nav pagination col-sm-6 hidden-print" ng-if="ctrl.paginator.items">
+        <li ng-repeat="pagnav in ctrl.paginator.items" class="{{pagnav.class}}"
+            title="{{::pagnav.tooltip}}">
+            <a ng-click="ctrl.paginator.page(pagnav.pageIndex)">{{pagnav.label }}</a>
+        </li>
+        <span> </span>
+        <div class="input-group" ng-if="ctrl.paginator.needGotoPage">
+            <span class="input-group-addon">第</span>
+            <input type="text" class="form-control" placeholder="页码"
+                   ng-model="ctrl.paginator.givenPageGoto"
+                   ng-keypress="ctrl.paginator.goto($event)">
+            <span class="input-group-addon">页 </span>
+            <span> </span>
+            <span class="input-group-addon">每页</span>
+            <input type="text" class="form-control" placeholder="行数"
+                   ng-model="ctrl.paginator.givenPageSize"
+                   ng-keypress="ctrl.paginator.setPageSize($event)">
+            <span class="input-group-addon">行</span>
+        </div>
+        <div class="input-group" ng-if="!ctrl.paginator.needGotoPage">
+            <span class="input-group-addon">每页</span>
+            <input type="text" class="form-control" placeholder="行数"
+                   ng-model="ctrl.paginator.givenPageSize"
+                   ng-keypress="ctrl.paginator.setPageSize($event)">
+            <span class="input-group-addon">行</span>
+        </div>
+    </ul>
+
+    <ul class="nav pagination col-sm-6 hidden-print" ng-if="main.user.code=='admin'">
+        <a href="#" class="btn btn-default" ng-if="!ctrl.showRecorrect" ng-click="ctrl.showRecorrect=true;">重新判卷</a>
+        <a href="#" class="btn btn-primary" ng-if="ctrl.showRecorrect" ng-click="ctrl.showRecorrect=false;">隐藏重新判卷</a>
+        <a href="#" class="btn btn-default" ng-if="!ctrl.showResubmit" ng-click="ctrl.showResubmit=true;">重新提交</a>
+        <a href="#" class="btn btn-warning" ng-if="ctrl.showResubmit" ng-click="ctrl.showResubmit=false;">隐藏重新提交</a>
+    </ul>
+
+    <!-- 如果当前控制器的对象有内容，就以列表的方式显示 -->
+    <table class="table table-bordered table-striped" ng-if="ctrl.paginator.data">
+        <thead>
+        <!-- 表头部分 -->
+        <tr>
+            <th class="col-sm-1 hidden-print">序号<span class="badge">{{ctrl.paginator.resultCount}}</span></th>
+            <th class="col-sm-2 hidden-print">考试名称
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选考试"
+                        ng-click="ctrl.paginator.showCustomFilter('config')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.config.show">
+                    <button type="button" class="btn btn-default"
+                            ng-model="ctrl.paginator.customFilter.config.ids"
+                            ng-change="ctrl.paginator.filter()"
+                            data-multiple="1" data-placeholder = "请选择考试"
+                            bs-options="u._id as u.name for u in ctrl.configs" bs-select>
+                    </button>
+                </div>
+            </th>
+            <th class="col-sm-1 hidden-print">发布状态
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选发布状态"
+                        ng-click="ctrl.paginator.showCustomFilter('publicStatus')"
+                        ng-if="main.user.code=='admin'">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.publicStatus.show && main.user.code=='admin'">
+                    <button type="button" class="btn btn-default"
+                            ng-model="ctrl.paginator.customFilter.publicStatus.value"
+                            ng-change="ctrl.paginator.filter()"
+                            data-multiple="1" data-placeholder = "请选择发布状态"
+                            bs-options="u for u in ctrl.publicStatuss" bs-select>
+                    </button>
+                </div>
+            </th>
+            <th class="col-sm-1 hidden-print">考试状态
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选考试状态"
+                        ng-click="ctrl.paginator.showCustomFilter('configStatus')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.configStatus.show">
+                    <button type="button" class="btn btn-default"
+                            ng-model="ctrl.paginator.customFilter.configStatus.value"
+                            ng-change="ctrl.paginator.filter()"
+                            data-multiple="1" data-placeholder = "请选择考试状态"
+                            bs-options="u for u in ctrl.configStatuss" bs-select>
+                    </button>
+                </div>
+            </th>
+            <th class="col-sm-1 hidden-print">卷面总分
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选卷面总分" ng-click="ctrl.paginator.showCustomFilter('point')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.point.show">
+                    <input type="number" min="0" title="最低总分" ng-change="ctrl.changePoint(false);" ng-model="ctrl.paginator.customFilter.point.value">
+                    <span class="glyphicon glyphicon-ok" title="执行卷面总分筛选" ng-click="ctrl.paginator.filter()"></span>
+                    <input type="number" min="0" title="最高总分" ng-change="ctrl.changePoint(true);" ng-model="ctrl.paginator.customFilter.point.value2">
+                </div>
+            </th>
+            <th class="col-sm-1 hidden-print">
+                <a ng-href="#" ng-click="ctrl.setSort('tester.code');" title="单击按考试成绩状态排序，再次单击反序">
+                考试成绩</a>
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选考试成绩状态"
+                        ng-click="ctrl.paginator.showCustomFilter('submitStatus')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.submitStatus.show">
+                    <button type="button" class="btn btn-default"
+                            ng-model="ctrl.paginator.customFilter.submitStatus.value"
+                            ng-change="ctrl.paginator.filter()"
+                            data-multiple="1" data-placeholder = "请选择考试成绩状态"
+                            bs-options="u for u in ctrl.submitStatuss" bs-select>
+                    </button>
+                </div>
+            </th>
+            <th ng-if="main.user.code=='admin'" class="col-sm-1 hidden-print">
+                <a ng-href="#" ng-click="ctrl.setSort('tester.code');"
+               title="单击按考生学号排序，再次单击反序">
+                考生</a>
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选考生，可输入学号或者姓名关键字"
+                        ng-click="ctrl.paginator.showCustomFilter('testerKey')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.testerKey.show">
+                    <input type="text" placeholder="筛选考生关键字"
+                           ng-model="ctrl.paginator.customFilter.testerKey.value"
+                           ng-keypress="ctrl.paginator.filter($event)">
+                        <span class="glyphicon glyphicon-remove"
+                              title="清除自定义筛选结果"
+                              ng-click="ctrl.paginator.clearFilter('testerKey','value')"></span>
+                </div>
+            </th>
+            <th class="col-sm-1 hidden-print">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- 表的主体部分，对每一个用户对象来循环 -->
+        <tr ng-repeat="r in ctrl.paginator.data | orderBy: ctrl.sortKey">
+            <td>{{:: $index+1+((ctrl.paginator.current-1)*ctrl.paginator.pageSize) }}</td>
+            <td title="生成试卷时间：{{:: r.dateGenerated | date:'yyyy-MM-dd HH:mm:ss' }}">{{:: r.config.name }}</td>
+            <td ng-if="r.config.isPublic" title="发布时间：{{::r.config.datePublic| date:'yyyy-MM-dd HH:mm:ss'}}">
+                已发布
+            </td><td ng-if="!r.config.isPublic">
+                未发布
+            </td>
+            <td title="{{::r.config.dateBegin| date:'yyyy-MM-dd HH:mm:ss'}} - {{::r.config.dateEnd| date:'yyyy-MM-dd HH:mm:ss'}}, 提前{{::r.config.minAhead}}分钟">
+                {{:: r.config.status }}
+            </td>
+            <td>{{:: r.point }}</td>
+            <td ng-if="!r.isSubmit && r.config.status=='未开始'">
+            </td>
+            <td ng-if="!r.isSubmit && r.config.status=='已结束'">未交卷
+                <a ng-if="r.canSubmit" ng-href="#" ng-click="ctrl.submit(r);" class="btn btn-xs btn-primary">补交</a>
+            </td>
+            <td ng-if="!r.isSubmit && r.config.status=='考试中'">未交卷
+                <a ng-if="main.user.code!='admin'" ng-href="/exams/{{:: r._id }}" class="btn btn-success">参加考试</a>
+            </td>
+            <td ng-if="r.isSubmit && r.isCorrected" title="交卷时间：{{:: r.dateSubmit | date:'yyyy-MM-dd HH:mm:ss' }}，IP：{{::r.submitIP}}，判卷时间：{{:: r.dateCorrect | date:'yyyy-MM-dd HH:mm:ss' }}">
+                {{::r.score}}
+                <a ng-if="main.user.code=='admin' && ctrl.showRecorrect" href="#" ng-click="ctrl.correct(r,true);" class="btn btn-xs btn-primary">重新判卷</a>
+                <a ng-if="main.user.code=='admin' && ctrl.showResubmit" href="#" ng-click="ctrl.unsubmit(r);" class="btn btn-xs btn-warning" title="允许用户(如考试时间允许)再次进入考试，并再次提交答案">重新提交</a>
+            </td>
+            <td ng-if="r.isSubmit && !r.isCorrected" title="交卷时间：{{:: r.dateSubmit | date:'yyyy-MM-dd HH:mm:ss' }}，IP：{{::r.submitIP}}">
+                已交卷，未判卷
+                <a ng-if="main.user.code=='admin'" href="#" ng-click="ctrl.correct(r,false);" class="btn btn-xs btn-info">判卷</a>
+                <a ng-if="main.user.code=='admin' && ctrl.showResubmit" href="#" ng-click="ctrl.unsubmit(r);" class="btn btn-xs btn-warning" title="允许用户(如考试时间允许)再次进入考试，并再次提交答案">重新提交</a>
+            </td>
+            <td ng-if="main.user.code=='admin'">{{::r.tester.code}} {{:: r.tester.name }}</td>
+            <!-- 已经提交答案，可以复卷，并且考试已经结束，显示查看按钮 -->
+            <td ng-if="main.user.code=='admin' || (r.isSubmit && r.config.canReview && r.config.status=='已结束')">
+                <a ng-href="/exams/view_{{:: r._id }}" class="btn btn-info">查看</a>
+            </td>
+            <!--其他情况都不显示操作按钮-->
+        </tr>
+        </tbody>
+    </table>
+</div>

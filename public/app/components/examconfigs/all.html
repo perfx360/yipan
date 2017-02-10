@@ -1,0 +1,493 @@
+<div class="page-header">
+    <h1>
+        考试列表
+        <a href="/examconfigs/create" class="btn btn-primary hidden-print"
+           ng-if="main.user.code=='admin' && !ctrl.isGenerating">
+            <span class="glyphicon glyphicon-plus"></span>
+            安排新考试
+        </a>
+    </h1>
+</div>
+
+<!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+<div class="row show-hide-message hidden-print" ng-if="ctrl.paginator.message">
+    <div class="col-sm-12">
+        <!-- -->
+        <div class="alert alert-success" ng-if="ctrl.paginator.isSuccess">
+            {{ ctrl.paginator.message }}
+        </div>
+        <div class="alert alert-danger" ng-if="!ctrl.paginator.isSuccess">
+            {{ ctrl.paginator.message }}
+        </div>
+
+    </div>
+</div>
+
+<div class="jumbotron text-center hidden-print" ng-if="ctrl.paginator.processing">
+    <span class="glyphicon glyphicon-repeat spinner"></span>
+    <p>正在加载考试信息 ...</p>
+</div>
+
+<div ng-if="ctrl.isGenerating" class="jumbotron">
+    <h1>正在生成试卷 ...</h1>
+    <h2>进度：{{ctrl.info.stepTotal}}  -  {{ctrl.info.stepInfo}}</h2>
+    <h3 ng-show="ctrl.info.stepDetail">明细：{{ctrl.info.stepDetail}}</h3>
+</div>
+
+<div ng-if="main.user.code=='admin' && !ctrl.isGenerating">
+    <!--分页栏，仅在数据行大于一页时出现-->
+    <!--注意这里不能全部用一次性绑定，因为页码会动态改变-->
+    <ul class="nav pagination col-sm-6 hidden-print" ng-if="ctrl.paginator.items">
+        <li ng-repeat="pagnav in ctrl.paginator.items" class="{{pagnav.class}}"
+            title="{{::pagnav.tooltip}}">
+            <a ng-click="ctrl.paginator.page(pagnav.pageIndex)">{{pagnav.label }}</a>
+        </li>
+        <span> </span>
+        <div class="input-group" ng-if="ctrl.paginator.needGotoPage">
+            <span class="input-group-addon">第</span>
+            <input type="text" class="form-control" placeholder="页码"
+                   ng-model="ctrl.paginator.givenPageGoto"
+                   ng-keypress="ctrl.paginator.goto($event)">
+            <span class="input-group-addon">页 </span>
+            <span> </span>
+            <span class="input-group-addon">每页</span>
+            <input type="text" class="form-control" placeholder="行数"
+                   ng-model="ctrl.paginator.givenPageSize"
+                   ng-keypress="ctrl.paginator.setPageSize($event)">
+            <span class="input-group-addon">行</span>
+        </div>
+        <div class="input-group" ng-if="!ctrl.paginator.needGotoPage">
+            <span class="input-group-addon">每页</span>
+            <input type="text" class="form-control" placeholder="行数"
+                   ng-model="ctrl.paginator.givenPageSize"
+                   ng-keypress="ctrl.paginator.setPageSize($event)">
+            <span class="input-group-addon">行</span>
+        </div>
+    </ul>
+
+    <!--筛选框，收集关键字，以空格为分割-->
+    <ul class="nav pagination col-sm-6 hidden-print" ng-if="ctrl.paginator.showFilter">
+        <div class="input-group">
+            <span class="input-group-addon">筛选</span>
+            <input type="text" class="form-control"
+                   placeholder="筛选关键字,用空格分隔"
+                   ng-model="ctrl.paginator.keywords"
+                   ng-keypress="ctrl.paginator.filter($event)">
+            <span class="input-group-addon glyphicon glyphicon-remove"
+                  title="清除筛选结果"
+                  ng-click="ctrl.paginator.clearFilter()"></span>
+        </div>
+    </ul>
+
+    <!-- 如果当前控制器的对象有内容，就以列表的方式显示 -->
+    <table class="table table-bordered table-striped" ng-if="ctrl.paginator.data">
+        <thead>
+        <!-- 表头部分 -->
+        <tr>
+            <th class="col-sm-1 hidden-print">序号<span class="badge">{{ctrl.paginator.resultCount}}</span></th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('code')"
+                                                 title="单击按编号排序，再次单击反序">编号</a>
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选编号"
+                        ng-click="ctrl.paginator.showCustomFilter('code')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.code.show">
+                    <input type="text" placeholder="筛选编号关键字"
+                           ng-model="ctrl.paginator.customFilter.code.value"
+                           ng-keypress="ctrl.paginator.filter($event)">
+                    <span class="glyphicon glyphicon-remove"
+                          title="清除自定义筛选结果"
+                          ng-click="ctrl.paginator.clearFilter('code','value')"></span>
+                </div></th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('name')"
+                   title="单击按名称排序，再次单击反序">名称</a>
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选名称"
+                        ng-click="ctrl.paginator.showCustomFilter('name')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.name.show">
+                    <input type="text" placeholder="筛选名称关键字"
+                           ng-model="ctrl.paginator.customFilter.name.value"
+                           ng-keypress="ctrl.paginator.filter($event)">
+                    <span class="glyphicon glyphicon-remove"
+                          title="清除自定义筛选结果"
+                          ng-click="ctrl.paginator.clearFilter('name','value')"></span>
+                </div>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('sheet.name')"
+                title="单击按试卷名称排序，再次单击反序">试卷名称</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('numTemplate')"
+                title="单击按试卷套数排序，再次单击反序">试卷套数</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('pattern')"
+                title="单击按学生匹配模式排序，再次单击反序">学生模式
+            </a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('ipPattern')"
+                title="单击按IP限制模式排序，再次单击反序">IP限制
+            </a>
+            </th>
+            <th class="col-sm-1 hidden-print">
+                状态<a href="#" ng-click="ctrl.paginator.filter();"
+                     class="btn btn-primary btn-xs"
+                     title="刷新考试状态信息">
+                刷新</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('dateBegin')"
+                title="单击按考试开始时间排序，再次单击反序">开始</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('dateEnd')"
+                title="单击按考试结束时间排序，再次单击反序">结束</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('canReview')"
+                title="默认可以复卷，单击按当前可复卷排序，再次单击反序">可复卷</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('autoCorrect')"
+                title="默认自动判卷，单击按判卷方式排序，再次单击反序">判卷方式</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('isFull')"
+                title="默认为正常考试，单击按是否是试卷检测排序，再次单击反序">试卷检测</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('isPublic')"
+                title="单击按是否发布排序，再次单击反序">发布</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('isGenerated')"
+                title="单击按是否生成试卷排序，再次单击反序">生成试卷</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('remark')"
+                   title="单击按备注排序，再次单击反序">备注</a>
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选备注"
+                        ng-click="ctrl.paginator.showCustomFilter('remark')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.remark.show">
+                    <input type="text" placeholder="筛选备注关键字"
+                           ng-model="ctrl.paginator.customFilter.remark.value"
+                           ng-keypress="ctrl.paginator.filter($event)">
+                    <span class="glyphicon glyphicon-remove"
+                          title="清除自定义筛选结果"
+                          ng-click="ctrl.paginator.clearFilter('remark','value')"></span>
+                </div>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('lastModified')" title="单击按最后修改日期排序，再次单击反序">变动日期</a>
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选修改日期" ng-click="ctrl.paginator.showCustomFilter('lastModified')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.lastModified.show">
+                    <input type="date" title="设置起始日期" ng-model="ctrl.paginator.customFilter.lastModified.value">
+                    <input type="time" title="设置起始时间" ng-model="ctrl.paginator.customFilter.lastModified.value1">
+                    <span class="glyphicon glyphicon-ok" title="执行日期时间筛选" ng-click="ctrl.filter()"></span>
+                    <br>
+                    <input type="date" title="设置截止日期" ng-model="ctrl.paginator.customFilter.lastModified.value2">
+                    <input type="time" title="设置截止时间" ng-model="ctrl.paginator.customFilter.lastModified.value3">
+                </div></th>
+            <th class="col-sm-1 hidden-print">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- 表的主体部分，对每一个用户对象来循环 -->
+        <tr ng-repeat="r in ctrl.paginator.data">
+            <td>{{:: $index+1+((ctrl.paginator.current-1)*ctrl.paginator.pageSize) }}</td>
+            <td>{{:: r.code }}</td>
+            <td>{{:: r.name }}</td>
+            <td>{{:: r.sheet.name }}</td>
+            <td>{{:: r.numTemplate }}</td>
+            <td>{{:: r.patternB }}</td>
+            <td>{{:: r.ipPattern }}
+                <a href="#" ng-click="ctrl.showIP(r);" class="btn btn-danger btn-xs"
+                   title="检测考试IP异常情况"
+                   ng-if="r.ipPattern">
+                    检测异常</a>
+            </td>
+            <td>{{:: r.status  }}</td>
+            <td title="{{:: '可提前' + r.minAhead + '分钟开始考试'}}"
+                ng-if="r.minAhead">{{:: r.dateBegin | date:"yyyy-MM-dd HH:mm:ss"  }}</td>
+            <td ng-if="!r.minAhead">{{:: r.dateBegin | date:"yyyy-MM-dd HH:mm:ss"  }}</td>
+            <td>{{:: r.dateEnd | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+            <td>{{:: r.canReviewB  }}</td>
+            <td>{{:: r.autoCorrectB  }}</td>
+            <td>{{:: r.isFullB  }}</td>
+            <td ng-if="!r.isPublic">未发布
+                <a href="#" ng-click="ctrl.public(r,true);" class="btn btn-success btn-xs"
+                   ng-if="r.isGenerated"
+                   title="发布试卷，一经发布不能修改！">
+                    发布</a>
+            </td>
+            <td ng-if="r.isPublic" title="{{:: '发布时间 ' + (r.datePublic|date:'yyyy-MM-dd HH:mm:ss')}}">已发布
+                <a href="#" ng-click="ctrl.public(r,false);" class="btn btn-warning btn-xs"
+                   title="取消发布试卷">
+                    <!--ng-if="r.status!='考试中'"-->
+                    取消</a>
+            </td>
+            <td ng-if="r.isGenerated" title="{{::'生成时间 ' + (r.dateGenerated|date:'yyyy-MM-dd HH:mm:ss')}}">已生成
+                <a href="#" ng-click="ctrl.generate(r, true);" class="btn btn-info btn-xs"
+                   ng-if="!r.isPublic"
+                   title="重新生成随机试卷，需要较长时间！">
+                    重新生成</a>
+                <a href="#" ng-click="ctrl.insert(r);"
+                   class="btn btn-default btn-xs"
+                   title="为插班生随机生成试卷">
+                    插班</a>
+            </td>
+            <td ng-if="!r.isGenerated">未生成
+                <a href="#" ng-click="ctrl.generate(r, false);" class="btn btn-info btn-xs"
+                   title="生成随机试卷，需要较长时间！">
+                    生成</a>
+            </td>
+            <td>{{:: r.remark }}</td>
+            <td>{{:: r.lastModified | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+            <!-- 每一行末尾显示修改和删除两个选择 -->
+            <td>
+                <a href="#" ng-click="ctrl.showStat(r._id);" class="btn btn-success btn-xs"
+                   title="查看考试统计信息">
+                    统计</a>
+                <a href="#" ng-click="ctrl.showExams(r._id);" class="btn btn-primary btn-xs"
+                   ng-if="r.isGenerated"
+                   title="查看试卷">
+                    查卷</a>
+
+                <!--删除和修改考试仅当考试没有公开，且已经关闭的情况下-->
+                <a ng-href="/examconfigs/{{:: r._id }}"
+                   ng-if="!r.isPublic"
+                   class="btn btn-default btn-xs">修改</a>
+
+                <a href="#" ng-click="ctrl.delete(r);" class="btn btn-danger btn-xs"
+                   ng-if="!r.isPublic">删除</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Modal Markup kept out of all the div elements -->
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">你确定要删除该考试吗？</h4>
+                    <h6 class="modal-title">{{ctrl.paginator.deleteId}}</h6>
+                </div>
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <h3>{{ctrl.paginator.deleteMessage}}</h3>
+                </div>
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal" ng-click="ctrl.paginator.delete()">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--考试统计信息-->
+<div class="modal fade" id="modalStat">
+    <div class="modal-dialog" style="width:auto;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">考试信息统计：{{ctrl.stat.config.name}}</h4>
+                <h6 class="modal-title">
+                    {{ctrl.stat.config.dateBegin | date:"yyyy-MM-dd HH:mm:ss"}} - {{ctrl.stat.config.dateEnd | date:"yyyy-MM-dd HH:mm:ss"}}
+                    , {{ctrl.stat.config.status}}, {{ctrl.stat.config.pattern}}
+                    <a href="#" class="btn btn-primary" ng-click="ctrl.refreshStat();">
+                        刷新
+                    </a>
+                </h6>
+            </div>
+            <div class="modal-body">
+                <!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+                <div class="row show-hide-message" ng-if="ctrl.message">
+                    <div class="col-sm-6 col-sm-offset-2">
+                        <!-- -->
+                        <div class="alert alert-success" ng-if="ctrl.isSuccess">
+                            {{ ctrl.message }}
+                        </div>
+                        <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+                            {{ ctrl.message }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 视图控制按钮-->
+                <div class="row">
+                    <div class="col-sm-1">
+                        <a class="btn btn-info" ng-if="ctrl.filteredStat.total">所有{{::ctrl.stat.exam.numTotal}}
+                        </a>
+                        <a class="btn btn-default" ng-click="ctrl.setFilterStat(null);" ng-if="!ctrl.filteredStat.total">所有{{::ctrl.stat.exam.numTotal}}</a>
+                    </div><div class="col-sm-2">
+                        <a class="btn btn-danger"> </a>
+                        <a class="btn btn-info" ng-if="ctrl.filteredStat.unsubmit" ng-click="ctrl.setFilterStat('unsubmit');">未交卷{{ctrl.stat.exam.numUnsubmit}}</a>
+                        <a class="btn btn-default" ng-if="!ctrl.filteredStat.unsubmit" ng-click="ctrl.setFilterStat('unsubmit');">未交卷{{ctrl.stat.exam.numUnsubmit}}</a>
+                    </div><div class="col-sm-2">
+                        <a class="btn btn-warning"> </a>
+                        <a class="btn btn-info" ng-if="ctrl.filteredStat.submit" ng-click="ctrl.setFilterStat('submit');">已交卷,未判卷{{ctrl.stat.exam.numSubmit}}</a>
+                        <a class="btn btn-default" ng-if="!ctrl.filteredStat.submit" ng-click="ctrl.setFilterStat('submit');">已交卷,未判卷{{ctrl.stat.exam.numSubmit}}</a>
+                    </div><div class="col-sm-2">
+                        <a class="btn btn-success"> </a>
+                        <a class="btn btn-info" ng-if="ctrl.filteredStat.correct" ng-click="ctrl.setFilterStat('correct');">已判卷{{ctrl.stat.exam.numCorrect}}</a>
+                        <a class="btn btn-default" ng-if="!ctrl.filteredStat.correct" ng-click="ctrl.setFilterStat('correct');">已判卷{{ctrl.stat.exam.numCorrect}}</a>
+                    </div>
+
+                    <div class="col-sm-offset-1 col-sm-2" ng-if="ctrl.viewType=='table'">
+                        <a ng-href="#" ng-click="ctrl.viewType='list';"
+                           class="btn btn-info"><i class="fa fa-th"></i> 转到项目视图</a>
+                    </div><div class="col-sm-offset-1 col-sm-2" ng-if="ctrl.viewType=='list'">
+                        <a ng-href="#" ng-click="ctrl.viewType='table';"
+                           class="btn btn-primary"><i class="fa fa-table"></i> 转到表格视图</a>
+                    </div><div class="col-sm-1" ng-if="ctrl.viewType=='list'">
+                        <a ng-href="#" ng-click="ctrl.showDetailName=false;" ng-if="ctrl.showDetailName"
+                           class="btn btn-default"><i class="fa fa-user-times"></i> 不显示姓名</a>
+                        <a ng-href="#" ng-click="ctrl.showDetailName=true;" ng-if="!ctrl.showDetailName"
+                           class="btn btn-warning"><i class="fa fa-user-plus"></i> 显示姓名</a>
+                    </div>
+                </div>
+
+                <div class="col-sm-2" ng-if="ctrl.viewType=='list'" ng-repeat="r in ctrl.stat.exam.data | orderBy: ctrl.sortKey | filter: ctrl.filterStat">
+                    <a ng-href="#" ng-click="ctrl.showExams(ctrl.stat.config._id, r.tester.code)" class="btn btn-danger"
+                       ng-if="!r.isSubmit"
+                       title="查看 [{{::r.tester.code}}, {{::r.tester.name}}] 的试卷">
+                        {{::r.tester.code}}<label ng-show="ctrl.showDetailName"> {{::r.tester.name}}</label>
+                    </a><a ng-href="#" ng-click="ctrl.showExams(ctrl.stat.config._id, r.tester.code)" class="btn btn-warning"
+                       ng-if="r.isSubmit && !r.isCorrected"
+                       title="查看 [{{::r.tester.code}}, {{::r.tester.name}}] 的试卷">
+                        {{::r.tester.code}}<label ng-show="ctrl.showDetailName"> {{::r.tester.name}}</label>
+                    </a><a ng-href="#" ng-click="ctrl.showExams(ctrl.stat.config._id, r.tester.code)" class="btn btn-success"
+                       ng-if="r.isCorrected"
+                       title="查看 [{{::r.tester.code}}, {{::r.tester.name}}] 的试卷">
+                        {{::r.tester.code}}<label ng-show="ctrl.showDetailName"> {{::r.tester.name}}</label>
+                        <label class="btn btn-default">{{::r.score}}</label>
+                    </a>
+                </div>
+
+                <!-- 表格视图 -->
+                <table class="table table-bordered table-striped" ng-if="ctrl.viewType=='table'">
+                    <thead>
+                    <!-- 表头部分 -->
+                    <tr>
+                        <th class="col-sm-1 hidden-print">序号<span class="badge">{{::ctrl.stat.exam.data.length}}</span></th>
+                        <th class="col-sm-2 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('tester.code');"
+                                                             title="单击按学号排序，再次单击反序">学号</a>
+                        </th><th class="col-sm-2 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('tester.name');"
+                                                             title="单击按名称排序，再次单击反序">名称</a>
+                        </th><th class="col-sm-2 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('dateSubmit');"
+                                                             title="单击按交卷时间排序，再次单击反序">交卷</a>
+                        </th><th class="col-sm-2 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('dateCorrect');"
+                                                             title="单击按判卷时间排序，再次单击反序">判卷</a>
+                        </th><th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('score');"
+                                                             title="单击按得分排序，再次单击反序">得分</a>
+                        </th>
+                        <th class="col-sm-2 hidden-print">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- 表的主体部分，对每一个用户对象来循环 -->
+                    <tr ng-repeat="r in ctrl.stat.exam.data | orderBy: ctrl.sortKey | filter: ctrl.filterStat">
+                        <td>{{:: $index+1 }}</td>
+                        <td>{{:: r.tester.code }}</td>
+                        <td>{{:: r.tester.name }}</td>
+                        <td>{{:: r.dateSubmit | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+                        <td>{{:: r.dateCorrect | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+                        <td>{{:: r.score}}</td>
+                        <td>
+                            <button ng-click="ctrl.showExams(ctrl.stat.config._id,r.tester.code);" class="btn btn-info">查卷</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--IP统计信息-->
+<div class="modal fade" id="modalIP">
+    <div class="modal-dialog" style="width:auto;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">IP信息统计：{{ctrl.ipInfo.config.name}}</h4>
+                <h6 class="modal-title">
+                    {{ctrl.ipInfo.config.dateBegin | date:"yyyy-MM-dd HH:mm:ss"}} - {{ctrl.ipInfo.config.dateEnd | date:"yyyy-MM-dd HH:mm:ss"}}
+                    , {{ctrl.ipInfo.config.status}}, {{ctrl.ipInfo.config.pattern}}
+                    <a href="#" class="btn btn-primary" ng-click="ctrl.refreshIpInfo();">
+                        刷新
+                    </a>
+                </h6>
+            </div>
+            <div class="modal-body">
+                <!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+                <div class="row show-hide-message" ng-if="ctrl.message">
+                    <div class="col-sm-6 col-sm-offset-2">
+                        <!-- -->
+                        <div class="alert alert-success" ng-if="ctrl.isSuccess">
+                            {{ ctrl.message }}
+                        </div>
+                        <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+                            {{ ctrl.message }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 视图控制按钮-->
+                <div class="row">
+                    <div class="col-sm-1">
+                        <a class="btn btn-info" ng-if="ctrl.filteredIp.total">所有{{::ctrl.ipInfo.exam.numTotal}}
+                        </a>
+                        <a class="btn btn-default" ng-click="ctrl.setFilterIp(null);" ng-if="!ctrl.filteredIp.total">所有{{::ctrl.ipInfo.exam.numTotal}}</a>
+                    </div><div class="col-sm-2">
+                        <a class="btn btn-danger"> </a>
+                        <a class="btn btn-info" ng-if="ctrl.filteredIp.abnormalRead" ng-click="ctrl.setFilterIp('abnormalRead');">读卷异常{{ctrl.ipInfo.exam.numAbnormalRead}}</a>
+                        <a class="btn btn-default" ng-if="!ctrl.filteredIp.abnormalRead" ng-click="ctrl.setFilterIp('abnormalRead');">读卷异常{{ctrl.ipInfo.exam.numAbnormalRead}}</a>
+                    </div><div class="col-sm-2">
+                        <a class="btn btn-warning"> </a>
+                        <a class="btn btn-info" ng-if="ctrl.filteredIp.abnormalSubmit" ng-click="ctrl.setFilterIp('abnormalSubmit');">交卷异常{{ctrl.ipInfo.exam.numAbnormalSubmit}}</a>
+                        <a class="btn btn-default" ng-if="!ctrl.filteredIp.abnormalSubmit" ng-click="ctrl.setFilterIp('abnormalSubmit');">交卷异常{{ctrl.ipInfo.exam.numAbnormalSubmit}}</a>
+                    </div><div class="col-sm-2">
+                        <a class="btn btn-success"> </a>
+                        <a class="btn btn-info" ng-if="ctrl.filteredIp.normal" ng-click="ctrl.setFilterIp('normal');">正常{{ctrl.ipInfo.exam.numNormal}}</a>
+                        <a class="btn btn-default" ng-if="!ctrl.filteredIp.normal" ng-click="ctrl.setFilterIp('normal');">正常{{ctrl.ipInfo.exam.numNormal}}</a>
+                    </div>
+                </div>
+
+                <!-- 表格视图 -->
+                <table class="table table-bordered table-striped">
+                    <thead>
+                    <!-- 表头部分 -->
+                    <tr>
+                        <th class="col-sm-1 hidden-print">序号<span class="badge">{{::ctrl.ipInfo.exam.data.length}}</span></th>
+                        <th class="col-sm-1 hidden-print">学号
+                        </th><th class="col-sm-1 hidden-print">名称
+                        </th><th class="col-sm-1 hidden-print">参加时间
+                        </th><th class="col-sm-1 hidden-print">参加IP
+                        </th><th class="col-sm-1 hidden-print">交卷时间
+                        </th><th class="col-sm-1 hidden-print">交卷IP
+                        </th><th class="col-sm-1 hidden-print">得分
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- 表的主体部分，对每一个用户对象来循环 -->
+                    <tr ng-repeat="r in ctrl.ipInfo.exam.data | filter: ctrl.filterIp">
+                        <td>{{:: $index+1 }}</td>
+                        <td>{{:: r.tester.code }}</td>
+                        <td>{{:: r.tester.name }}</td>
+                        <td>{{:: r.dateRead | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+                        <td>{{:: r.readIP }}</td>
+                        <td>{{:: r.dateSubmit | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+                        <td>{{:: r.submitIP }}</td>
+                        <td>{{:: r.score}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>

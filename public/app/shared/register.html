@@ -1,0 +1,54 @@
+<!-- 登陆视图配置 -->
+<div class="row col-md-6 col-md-offset-3">
+    <div class="jumbotron">
+        <h1>新用户注册</h1>
+        <!-- 登陆表单，对应处理函数时当前控制对象的doLogin方法 -->
+        <form ng-submit="login.doLogin()">
+
+            <!-- 用户名 -->
+            <div class="form-group">
+                <label>用户代号</label>
+                <input type="text" class="form-control" ng-model="login.loginData.username">
+            </div>
+
+            <!-- 密码 -->
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" class="form-control" ng-model="login.loginData.password">
+            </div>
+
+            <div class="form-group">
+                <label>联系人</label>
+                <input type="text" class="form-control" ng-model="login.loginData.username">
+            </div>
+
+
+            <div class="form-group">
+                <label>联系电话</label>
+                <input type="text" class="form-control" ng-model="login.loginData.username">
+            </div>
+
+            <div class="form-group">
+                <label>联系地址</label>
+                <input type="text" class="form-control" ng-model="login.loginData.username">
+            </div>
+
+            <!-- 登陆错误提示信息，如果有的话就显示 -->
+            <div class="alert alert-danger" ng-if="login.error">
+                {{ login.error }}
+            </div>
+
+            <!-- 登陆提交按钮 -->
+            <button type="submit" class="btn btn-block btn-primary">
+                <!-- 没有提交，就显示登陆的标签 -->
+                <span ng-if="!login.processing">注册</span>
+                <!--
+                    已经提交了，就显示一个繁忙图标
+                 -->
+                <span ng-if="login.processing" class="spinner"><span class="glyphicon glyphicon-repeat"></span></span>
+            </button>
+
+        </form>
+    </div>
+
+</div>

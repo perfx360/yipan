@@ -1,0 +1,233 @@
+<!-- 当个用户的视图，提供修改和新增两种功能  -->
+<div class="page-header">
+    <!-- 根据提供的操作类型user.type，决定显示哪个标题 -->
+    <h1 ng-if="ctrl.type == 'create'">新建用户</h1>
+    <h1 ng-if="ctrl.type == 'edit'">修改用户</h1>
+    <h1 ng-if="ctrl.type == 'me'">我的资料</h1>
+</div>
+
+<!--
+    定义一个表单，对应的处理办法是当前控制器定义的saveUser方法
+    由于修改和新增操作指定的控制器不同，saveUser方法也有不同实现
+ -->
+<form name='editForm' class="form-horizontal" ng-submit="ctrl.save(editForm)" novalidate>
+    <!-- 第一个可修改项，代号名称 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">代号</label>
+
+        <div class="col-sm-4" ng-if="ctrl.type!=='create'">
+            <label class="form-control alert-danger">{{::ctrl.data.code}}</label>
+        </div>
+        <div class="col-sm-4" ng-if="ctrl.type=='create'">
+            <input type="text" class="form-control" name="code" ng-model="ctrl.data.code"
+                    ng-minlength="2" ng-required="true"
+                    ng-model-options="{updateOn: 'blur'}"
+                    data-toggle="tooltip"
+                    data-placement="right"
+                    title="登录时的用户代码，必填项，至少2位"
+                    placeholder="必填项，至少2位">
+
+            <span class="error-message" ng-if="editForm.code.$dirty && editForm.code.$error.required">
+                必填项</span>
+            <span class="error-message" ng-if="editForm.code.$dirty && editForm.code.$error.minlength">
+                长度至少2位</span>
+        </div>
+
+    <!-- 用户名 -->
+        <label class="col-sm-2 control-label">名称</label>
+
+        <div class="col-sm-4">
+            <input type="text" class="form-control" name="name" ng-model="ctrl.data.name"
+                   ng-minlength="2" ng-required="true"
+                   ng-model-options="{updateOn: 'blur'}"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="用户的真实姓名，必填项，至少2位"
+                   placeholder="必填项，至少2位">
+            <span class="error-message" ng-if="editForm.name.$dirty && editForm.name.$error.required">
+                必填项</span>
+            <span class="error-message" ng-if="editForm.name.$dirty && editForm.name.$error.minlength">
+                长度至少2位</span>
+        </div>
+    </div>
+
+    <!-- 密码 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">密码</label>
+
+        <div class="col-sm-4">
+            <input type="password" class="form-control" name="pwd" ng-model="ctrl.data.pwd"
+                   ng-minlength="4" ng-required="true"
+                   ng-model-options="{updateOn: 'blur'}"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="用户的登录密码，必填项，至少4位"
+                   placeholder="必填项，至少4位"
+                   ng-if="ctrl.type == 'create'">
+            <input type="password" class="form-control" name="pwd" ng-model="ctrl.data.pwd"
+                   ng-minlength="4"
+                   ng-model-options="{updateOn: 'blur'}"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="修改用户的登录密码，无需修改密码请不填此项"
+                   ng-if="ctrl.type !== 'create'">
+            <span class="error-message" ng-if="editForm.pwd.$dirty && editForm.pwd.$error.required">
+                必填项</span>
+            <span class="error-message" ng-if="editForm.pwd.$dirty && editForm.pwd.$error.minlength">
+                长度至少4位</span>
+        </div>
+
+        <!--确认密码-->
+        <div ng-show="ctrl.type == 'create' || editForm.pwd.$dirty">
+            <label class="col-sm-2 control-label">密码确认</label>
+
+            <div class="col-sm-4">
+                <input type="password" class="form-control" name="pwdRepeat" ng-model="ctrl.pwdRepeat"
+                       ng-minlength="4" ng-required="true" pwd-repeat
+                       ng-model-options="{updateOn: 'blur'}"
+                       data-toggle="tooltip"
+                       data-placement="right"
+                       title="用户的登录密码确认，必填项，至少4位"
+                       placeholder="必填项，至少4位"
+                       ng-if="ctrl.type == 'create'">
+                <input type="password" class="form-control" name="pwdRepeat" ng-model="ctrl.pwdRepeat"
+                       ng-minlength="4" pwd-repeat
+                       ng-model-options="{updateOn: 'blur'}"
+                       data-toggle="tooltip"
+                       data-placement="right"
+                       title="修改用户的登录密码确认，无需修改密码请不填此项"
+                       ng-if="ctrl.type !== 'create'">
+                <span class="error-message" ng-if="editForm.pwdRepeat.$dirty && editForm.pwdRepeat.$error.required">
+                    必填项</span>
+                <span class="error-message" ng-if="editForm.pwdRepeat.$dirty && editForm.pwdRepeat.$error.minlength">
+                    长度至少4位</span>
+                <span class="error-message" ng-if="editForm.pwdRepeat.$dirty && editForm.pwdRepeat.$error.samePassword">
+                    两次密码不一致</span>
+            </div>
+        </div>
+    </div>
+
+    <!--备注-->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">备注</label>
+        <div class="col-sm-4">
+            <input type="text" class="form-control" name="remark" ng-model="ctrl.data.remark"
+                   title="用户的备注信息">
+        </div>
+
+        <!--磁盘容量-->
+        <div ng-if="ctrl.data.code!='admin'">
+            <label class="col-sm-2 control-label">磁盘容量</label>
+            <div class="col-sm-2 control-label" ng-if="ctrl.type == 'me'">
+                <div class="progress">
+                    <div class="progress-bar {{::ctrl.data.sizeClass}}" role="progressbar"
+                         aria-valuenow="{{::ctrl.data.procentSize}}" aria-valuemin="0" aria-valuemax="100"
+                         style="min-width: 2em; width: {{::ctrl.data.procentSize}}%;">
+                        {{::ctrl.data.procentSize}}%
+                        <span class="sr-only">40% Complete (success)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2 control-label" ng-if="ctrl.type == 'me'">
+                {{::ctrl.data.usedSizeB}}/{{::ctrl.data.diskSizeB}}
+            </div>
+            <div class="col-sm-4" ng-if="ctrl.type !== 'me'">
+                <input type="text" class="form-control" name="diskSize" ng-model="ctrl.data.diskSizeB"
+                       title="用户磁盘分配额度">
+            </div>
+        </div>
+    </div>
+
+    <!--角色-->
+    <div class="form-group" ng-if="ctrl.type !== 'me' && ctrl.data.code!='admin'">
+        <label class="col-sm-2 control-label">角色</label>
+
+        <div class="col-sm-4 btn-group">
+            <button type="button" class="form-control" name="role"
+                    ng-model="ctrl.data.role"
+                    ng-required="true"
+                    title="用户的角色，决定了用户的权限大小，可多选，必填项"
+                    data-multiple="1" data-animation="am-flip-x"
+                    data-placeholder = "请选择角色"
+                    bs-options="r._id as r.name for r in ctrl.roles" bs-select>
+            </button>
+            <span class="error-message" ng-if="editForm.role.$dirty && editForm.role.$error.required">
+                必填项</span>
+        </div>
+    </div>
+
+    <!-- 根据操作类型显示不同的提交按钮标签 -->
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-3">
+            <a ng-href="/users" class="btn btn-info btn-lg btn-block"
+               ng-if="ctrl.type != 'me'">返回列表</a>
+        </div>
+        <div class="col-sm-3">
+            <!-- 后台加载过程结束了，就显示按钮可点击的状态，加载过程可能是加载显示数据，如角色列表，
+                或者是点击新建后的提交动作，这样可以避免重复提交 -->
+            <button type="submit" class="btn btn-success btn-lg btn-block"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && !ctrl.processing">
+                新建</button>
+            <!--正在加载，就显示一个繁忙图标-->
+            <button type="submit" class="btn btn-success btn-lg btn-block disabled"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && ctrl.processing">
+                新建<span class="glyphicon glyphicon-repeat"></span></button>
+            <button type="submit" class="btn btn-success btn-lg btn-block"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type !== 'create' && !ctrl.processing">
+                修改</button>
+            <!--正在加载，就显示一个繁忙图标-->
+            <button type="submit" class="btn btn-success btn-lg btn-block disabled"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type !== 'create' && ctrl.processing">
+                修改<span class="glyphicon glyphicon-repeat"></span></button>
+        </div>
+    </div>
+
+    <!--批注的头部信息提示-->
+    <div class="form-group" ng-if="ctrl.type !== 'me' && ctrl.data.code!='admin'">
+        <label class="col-sm-2 control-label">批注列表</label>
+        <a href="#" ng-click="ctrl.addMark();"
+           class="btn btn-xs btn-primary" title="新增一条批注信息"
+        ><i class="fa fa-plus fa-2x"></i></a>
+    </div>
+</form>
+
+<table class="table table-striped" ng-if="ctrl.type !== 'me' && ctrl.data.code!='admin' && ctrl.data.marks.length>0">
+    <thead>
+        <!-- 表头部分 -->
+        <tr>
+            <th class="col-sm-1">序号<span class="badge">{{ctrl.data.marks.length}}</span></th>
+            <th class="col-sm-1">批注日期</th>
+            <th class="col-sm-1">批注</th>
+            <th class="col-sm-1">删除</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- 表的主体部分，对每一个用户对象来循环 -->
+        <tr ng-repeat="r in ctrl.data.marks">
+            <td class="col-sm-1">{{:: $index+1}}</td>
+            <td class="col-sm-2">{{ r.date | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+            <td class="col-sm-8">
+                <input type="text" class="form-control" ng-change="ctrl.changeMark(r);" ng-model="r.mark">
+            </td>
+            <td class="col-sm-1">
+                <a href="#" ng-click="ctrl.deleteMark($index);"
+                   class="btn btn-xs btn-danger" title="删除这一条批注信息"
+                ><i class="fa fa-remove fa-2x"></i></a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+<div class="row show-hide-message" ng-if="ctrl.message">
+    <div class="col-sm-6 col-sm-offset-2">
+        <!-- -->
+        <div class="alert alert-success" ng-if="ctrl.isSuccess">
+            {{ ctrl.message }}
+        </div>
+        <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+            {{ ctrl.message }}
+        </div>
+
+    </div>
+</div>

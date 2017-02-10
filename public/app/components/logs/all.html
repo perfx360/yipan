@@ -1,0 +1,207 @@
+<div class="page-header">
+    <h1>
+        操作日志列表
+        <a ng-click="ctrl.clear()" class="btn btn-default"
+                ng-if="main.permission['log']['clear']">
+            <span class="glyphicon glyphicon-trash"></span>
+            清空日志
+        </a>
+    </h1>
+
+</div>
+
+<!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+<div class="row show-hide-message" ng-if="ctrl.paginator.message">
+    <div class="col-sm-12">
+        <!-- -->
+        <div class="alert alert-success" ng-if="ctrl.paginator.isSuccess">
+            {{ ctrl.paginator.message }}
+        </div>
+        <div class="alert alert-danger" ng-if="!ctrl.paginator.isSuccess">
+            {{ ctrl.paginator.message }}
+        </div>
+
+    </div>
+</div>
+
+<div class="jumbotron text-center" ng-if="ctrl.paginator.processing">
+    <span class="glyphicon glyphicon-repeat spinner"></span>
+    <p>正在加载日志信息 ...</p>
+</div>
+
+<!--筛选框，收集关键字，以空格为分割-->
+<div ng-if="main.permission['log']['view']">
+    <!--分页栏，仅在数据行大于一页时出现-->
+    <!--注意这里不能全部用一次性绑定，因为页码会动态改变-->
+    <ul class="nav pagination col-sm-6" ng-if="ctrl.paginator.items">
+        <li ng-repeat="pagnav in ctrl.paginator.items" class="{{pagnav.class}}"
+            title="{{::pagnav.tooltip}}">
+            <a ng-click="ctrl.paginator.page(pagnav.pageIndex)">{{pagnav.label }}</a>
+        </li>
+        <span> </span>
+        <div class="input-group" ng-if="ctrl.paginator.needGotoPage">
+            <span class="input-group-addon">第</span>
+            <input type="text" class="form-control" placeholder="页码"
+                   ng-model="ctrl.paginator.givenPageGoto"
+                   ng-keypress="ctrl.paginator.goto($event)">
+            <span class="input-group-addon">页 </span>
+            <span> </span>
+            <span class="input-group-addon">每页</span>
+            <input type="text" class="form-control" placeholder="行数"
+                   ng-model="ctrl.paginator.givenPageSize"
+                   ng-keypress="ctrl.paginator.setPageSize($event)">
+            <span class="input-group-addon">行</span>
+        </div>
+        <div class="input-group" ng-if="!ctrl.paginator.needGotoPage">
+            <span class="input-group-addon">每页</span>
+            <input type="text" class="form-control" placeholder="行数"
+                   ng-model="ctrl.paginator.givenPageSize"
+                   ng-keypress="ctrl.paginator.setPageSize($event)">
+            <span class="input-group-addon">行</span>
+        </div>
+    </ul>
+
+    <ul class="nav pagination col-sm-6" ng-if="ctrl.paginator.showFilter">
+        <div class="input-group">
+            <span class="input-group-addon">筛选</span>
+            <input type="text" class="form-control"
+                   placeholder="筛选关键字,用空格分隔"
+                   ng-model="ctrl.paginator.keywords"
+                   ng-keypress="ctrl.paginator.filter($event)">
+            <span class="input-group-addon glyphicon glyphicon-remove"
+                  title="清除筛选结果"
+                  ng-click="ctrl.paginator.clearFilter()"></span>
+        </div>
+    </ul>
+
+    <!-- 如果当前控制器的对象有内容，就以列表的方式显示 -->
+    <table class="table table-striped" ng-if="ctrl.paginator.data">
+        <thead>
+        <!-- 表头部分 -->
+        <tr>
+            <th class="col-sm-1">序号<span class="badge">{{ctrl.paginator.resultCount}}</span></th>
+            <th class="col-sm-1">用户
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选用户"
+                        ng-click="ctrl.paginator.showCustomFilter('user')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.user.show">
+                    <button type="button" class="btn btn-default"
+                            ng-model="ctrl.paginator.customFilter.user.value"
+                            ng-change="ctrl.paginator.filter()"
+                            data-multiple="1" data-placeholder = "请选择用户"
+                            bs-options="u._id as u.name for u in ctrl.users" bs-select>
+                    </button>
+                </div>
+            </th>
+            <th class="col-sm-3">
+                <a ng-href="#" ng-click="ctrl.paginator.sort('date')"
+                   title="单击按日期排序，再次单击反序">日期</a>
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选日期"
+                        ng-click="ctrl.paginator.showCustomFilter('date')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+
+                <div ng-if="ctrl.paginator.customFilter.date.show">
+                    <input type="date" title="设置起始日期"
+                           ng-model="ctrl.paginator.customFilter.date.value">
+                    <input type="time" title="设置起始时间"
+                           ng-model="ctrl.paginator.customFilter.date.value1">
+                    <span class="glyphicon glyphicon-ok"
+                          title="执行日期时间筛选"
+                          ng-click="ctrl.paginator.filter()"></span>
+                    <input type="date" title="设置截止日期"
+                           ng-model="ctrl.paginator.customFilter.date.value2">
+                    <input type="time" title="设置截止时间"
+                           ng-model="ctrl.paginator.customFilter.date.value3">
+                </div>
+            </th>
+            <th class="col-sm-1">栏目
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选栏目"
+                        ng-click="ctrl.paginator.showCustomFilter('path')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.path.show">
+                    <button type="button" class="btn btn-default" ng-model="ctrl.paginator.customFilter.path.value"
+                            ng-change="ctrl.paginator.filter()"
+                            data-multiple="1" data-placeholder = "请选择栏目"
+                            bs-options="r.name as r.label for r in ctrl.paths" bs-select>
+                    </button>
+                </div>
+            </th>
+            <th class="col-sm-2">动作
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选动作"
+                        ng-click="ctrl.paginator.showCustomFilter('method')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.method.show">
+                    <button type="button" class="btn btn-default" ng-model="ctrl.paginator.customFilter.method.value"
+                            ng-change="ctrl.paginator.filter()"
+                            data-multiple="1" data-placeholder = "请选择动作"
+                            bs-options="r.name as r.label for r in ctrl.methods" bs-select>
+                    </button>
+                </div>
+            </th>
+            <th class="col-sm-2">参数
+                <button type="button" class="btn btn-default btn-xs" title="自定义筛选参数"
+                        ng-click="ctrl.paginator.showCustomFilter('parameters')">
+                    <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+                </button>
+                <div ng-if="ctrl.paginator.customFilter.parameters.show">
+                    <input type="text" placeholder="筛选参数关键字"
+                           ng-model="ctrl.paginator.customFilter.parameters.value"
+                           ng-keypress="ctrl.paginator.filter($event)">
+                <span class="glyphicon glyphicon-remove"
+                      title="清除自定义筛选结果"
+                      ng-click="ctrl.paginator.clearFilter('parameters','value')"></span>
+                </div>
+            </th>
+            <th class="col-sm-1">追踪</th>
+            <th class="col-sm-1">删除</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- 表的主体部分，对每一个用户对象来循环 -->
+        <tr ng-repeat="r in ctrl.paginator.data">
+            <td class="col-sm-1">{{:: $index+1+((ctrl.paginator.current-1)*ctrl.paginator.pageSize) }}</td>
+            <td class="col-sm-1">{{:: r.user.name }}</td>
+            <td class="col-sm-3">{{:: r.date | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+            <td class="col-sm-1">{{:: r.pathLabel }}</td>
+            <td class="col-sm-2">{{:: r.methodLabel }}</td>
+            <!--TODO 长短参数的选项-->
+            <td class="col-sm-2"><label title="{{:: r.parameters }}">{{:: r.para }}</label></td>
+            <td class="col-sm-1">
+                <!-- 修改操作对应了一个angular的路由映射到/ctrl.paginator./:role_id上面去 -->
+                <a ng-if="r.url" ng-href="{{:: r.url }}" class="btn btn-xs btn-primary">查看</a>
+            </td>
+            <td class="col-sm-1">
+                <a href="#" ng-click="ctrl.paginator.modalDelete(r)" class="btn btn-xs btn-danger"
+                   ng-if="main.permission['log']['delete']">删除</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Modal Markup kept out of all the div elements -->
+    <div class="modal fade" id="modalDelete">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">你确认删除此项日志吗？</h4>
+                    <h6 class="modal-title">{{ctrl.paginator.deleteId}}</h6>
+                </div>
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <h5>{{ctrl.paginator.deleteMessage}}</h5 >
+                </div>
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal" ng-click="ctrl.paginator.delete()">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

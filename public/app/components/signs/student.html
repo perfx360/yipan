@@ -1,0 +1,110 @@
+<div class="page-header">
+    <h1>
+        签到列表 <a ng-href="#" ng-click="ctrl.refresh();"
+               class="btn btn-primary"><i class="fa fa-refresh"></i>刷新</a>
+    </h1>
+</div>
+
+<!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+<div class="row show-hide-message hidden-print" ng-if="ctrl.message">
+    <div class="col-sm-12">
+        <!-- -->
+        <div class="alert alert-success" ng-if="ctrl.isSuccess">
+            {{ ctrl.message }}
+        </div>
+        <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+            {{ ctrl.message }}
+        </div>
+
+    </div>
+</div>
+
+<div class="jumbotron text-center hidden-print" ng-if="ctrl.processing">
+    <span class="glyphicon glyphicon-repeat spinner"></span>
+    <p>正在加载签到信息 ...</p>
+</div>
+
+<div class="row">
+    <div class="col-sm-1">
+        <a class="btn btn-info" ng-if="ctrl.filterKey==null">所有{{ctrl.data.length}}</a>
+        <a class="btn btn-default" ng-click="ctrl.setFilter(null);" ng-if="ctrl.filterKey!=null">所有{{ctrl.data.length}}</a>
+    </div><div class="col-sm-1">
+        <a class="btn btn-success"> </a>
+        <a class="btn btn-info" ng-if="ctrl.filtered.signed" ng-click="ctrl.setFilter('signed');">已签到{{ctrl.numReal}}</a>
+        <a class="btn btn-default" ng-if="!ctrl.filtered.signed" ng-click="ctrl.setFilter('signed');">已签到{{ctrl.numReal}}</a>
+    </div><div class="col-sm-1">
+        <a class="btn btn-default"> </a>
+        <a class="btn btn-info" ng-if="ctrl.filtered.unsigned" ng-click="ctrl.setFilter('unsigned');">未签到{{ctrl.numAbsent}}</a>
+        <a class="btn btn-default" ng-if="!ctrl.filtered.unsigned" ng-click="ctrl.setFilter('unsigned');">未签到{{ctrl.numAbsent}}</a>
+    </div><div class="col-sm-1">
+        <a class="btn btn-danger"> </a>
+        <a class="btn btn-info" ng-if="ctrl.filtered.agent" ng-click="ctrl.setFilter('agent');">代签{{ctrl.numAgent}}</a>
+        <a class="btn btn-default" ng-if="!ctrl.filtered.agent" ng-click="ctrl.setFilter('agent');">代签{{ctrl.numAgent}}</a>
+    </div><div class="col-sm-1">
+        <a class="btn btn-warning"> </a>
+        <a class="btn btn-info" ng-if="ctrl.filtered.excuse" ng-click="ctrl.setFilter('excuse');">请假{{ctrl.numExcuse}}</a>
+        <a class="btn btn-default" ng-if="!ctrl.filtered.excuse" ng-click="ctrl.setFilter('excuse');">请假{{ctrl.numExcuse}}</a>
+    </div>
+</div>
+
+<div>
+    <!-- 如果当前控制器的对象有内容，就以列表的方式显示 -->
+    <table class="table table-bordered table-striped" ng-if="ctrl.data">
+        <thead>
+        <!-- 表头部分 -->
+        <tr>
+            <th class="col-sm-1 hidden-print">序号<span class="badge">{{ctrl.data.length}}</span></th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('name')"
+                 title="单击按名称排序，再次单击反序">名称</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('owner')"
+                 title="单击按发起者排序，再次单击反序">发起者</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('create')"
+                 title="单击按发起时间排序，再次单击反序">发起时间</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('isClosed')"
+                 title="单击按签到状态排序，再次单击反序">签到状态</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('signgroup')"
+                 title="单击按对象排序，再次单击反序">签到对象</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('status')"
+                 title="单击按状态排序，再次单击反序">你的状态</a>
+            </th><th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('date')"
+                 title="状态最近修改时间，单击按时间排序，再次单击反序">修改时间</a>
+            </th>
+            <th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('remark')"
+                 title="单击按备注排序，再次单击反序">备注</a>
+            </th>
+            <th class="col-sm-1 hidden-print">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- 表的主体部分，对每一个用户对象来循环 -->
+        <tr ng-repeat="r in ctrl.data | orderBy: ctrl.sortKey | filter: ctrl.filter">
+            <td>{{:: $index+1 }}</td>
+            <td>{{:: r.name }}</td>
+            <td>{{:: r.owner.name }}</td>
+            <td>{{:: r.create | date:"yyyy-MM-dd HH:mm:ss" }}</td>
+            <td ng-if="r.isClosed">已关闭</td>
+            <td ng-if="!r.isClosed">签到中</td>
+            <td>{{:: r.signgroup.name }}</td>
+            <td>
+                <label class="btn btn-success" ng-if="r.status=='已签到'">{{r.status }}</label>
+                <label class="btn btn-default" ng-if="r.status=='未签到'">{{r.status }}</label>
+                <label class="btn btn-danger" ng-if="r.status=='代签'">{{r.status }}</label>
+                <label class="btn btn-warning" ng-if="r.status=='请假'">{{r.status}}</label>
+            </td>
+            <td>{{r.date | date:"yyyy-MM-dd HH:mm:ss"}}</td>
+            <td>{{:: r.remark }}</td>
+            <!-- 每一行末尾显示修改和删除两个选择 -->
+            <td>
+                <a ng-if="!r.isClosed && r.status=='未签到'"
+                   ng-click="ctrl.setStatus(r)" class="btn btn-success">
+                    <i class="fa fa-check-square-o"></i>签到</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>

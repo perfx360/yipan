@@ -1,0 +1,14 @@
+{
+  "name": "angular-locale_zh-cn",
+  "homepage": "https://github.com/edisonator/angular-locale_zh-cn",
+  "_release": "836e2b6990",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "836e2b6990d0d6cf5be674edecd563f9a1bf78e3"
+  },
+  "_source": "git://github.com/edisonator/angular-locale_zh-cn.git",
+  "_target": "*",
+  "_originalSource": "angular-locale_zh-cn",
+  "_direct": true
+}

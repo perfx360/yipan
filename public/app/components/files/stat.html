@@ -1,0 +1,213 @@
+<div ng-if="main.user.code=='admin'">
+    <div class="page-header">
+        <h1>作业统计</h1>
+    </div>
+
+    <!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+    <div class="row show-hide-message" ng-if="ctrl.message">
+        <div class="col-sm-12">
+            <div class="alert alert-success" ng-if="ctrl.isSuccess">
+                {{ ctrl.message }}
+            </div>
+            <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+                {{ ctrl.message }}
+            </div>
+        </div>
+    </div>
+
+    <div class="jumbotron text-center" ng-if="ctrl.processing">
+        <span class="glyphicon glyphicon-repeat spinner"></span>
+        <p>正在统计作业信息 ...</p>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-1"><label>模式</label></div>
+
+        <div class="col-sm-11">
+            <input type="text" class="form-control" name="pattern"
+                   ng-model="ctrl.pattern"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="学生匹配模式，必填项"
+                   placeholder="必填项">
+        </div>
+    </div>
+    <div class="row">
+        <label>常见的匹配模式有：
+            *  同专业若干个班级     20155611
+            *  同年级若干个班级     (2015[5611|5511])
+            *  不同年级的若干个班级  (20155611|20131608)</label>
+    </div>
+    <div class="row">
+        <div class="col-sm-1"><label>从</label></div>
+        <div class="col-sm-4">
+            <input type="datetime-local" title="设置统计起始日期"
+                   ng-model="ctrl.beginDate" ng-change="ctrl.adjustDate(true)">
+        </div>
+        <div class="col-sm-1"><label>到</label></div>
+        <div class="col-sm-4">
+            <input type="datetime-local" title="设置统计截止日期"
+                   ng-model="ctrl.endDate" ng-change="ctrl.adjustDate(false)">
+        </div>
+        <div class="col-sm-2">
+            <button type="button" class="btn btn-info hidden-print" title="按指定起止日期统计营业报表"
+                    ng-click="ctrl.stat()">
+                <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>统计
+            </button>
+        </div>
+    </div>
+
+    <hr>
+    <div class="row" ng-if="ctrl.data">
+        共上交作业 <label>{{ctrl.data.numFile}} </label> 份。
+    </div>
+    <div class="row" ng-if="ctrl.data">
+        <div ng-if="ctrl.data.numStudent>0">
+            <div class="col-sm-2" ng-if="ctrl.viewType=='table'">
+                <a ng-href="#" ng-click="ctrl.viewType='list';"
+                   class="btn btn-info"><i class="fa fa-th"></i> 转到项目视图</a>
+            </div><div class="col-sm-2" ng-if="ctrl.viewType=='list'">
+                <a ng-href="#" ng-click="ctrl.viewType='table';"
+                   class="btn btn-primary"><i class="fa fa-table"></i> 转到表格视图</a>
+            </div>
+        </div>
+        <div ng-if="ctrl.viewType=='table'">
+            <div class="col-sm-2">
+                <a ng-href="#" class="btn btn-danger" ng-click="ctrl.checkIP();"><i class="fa fa-search"></i> 异常检测</a>
+            </div>
+        </div>
+        <div ng-if="ctrl.viewType=='list'">
+            <div class="col-sm-offset-1 col-sm-2">
+                <a ng-href="#" ng-click="ctrl.showDetailName=false;" ng-if="ctrl.showDetailName"
+                   class="btn btn-default"><i class="fa fa-user-times"></i> 不显示姓名</a>
+                <a ng-href="#" ng-click="ctrl.showDetailName=true;" ng-if="!ctrl.showDetailName"
+                   class="btn btn-warning"><i class="fa fa-user-plus"></i> 显示姓名</a>
+            </div>
+            <div class="col-sm-offset-1 col-sm-2">
+                <a class="btn btn-info" ng-if="ctrl.filtered.all">所有{{ctrl.data.numExpected}}</a>
+                <a class="btn btn-default" ng-click="ctrl.setFilter(null);" ng-if="!ctrl.filtered.all">所有{{ctrl.data.numExpected}}</a>
+            </div><div class="col-sm-2">
+                <a class="btn btn-default"> </a>
+                <a class="btn btn-info" ng-if="ctrl.filtered.present" ng-click="ctrl.setFilter('present');">已交{{ctrl.data.numStudent}}</a>
+                <a class="btn btn-default" ng-if="!ctrl.filtered.present" ng-click="ctrl.setFilter('present');">已交{{ctrl.data.numStudent}}</a>
+            </div><div class="col-sm-2">
+                <a class="btn btn-danger"> </a>
+                <a class="btn btn-info" ng-if="ctrl.filtered.absent" ng-click="ctrl.setFilter('absent');">未交{{ctrl.data.numAbsent}}</a>
+                <a class="btn btn-default" ng-if="!ctrl.filtered.absent" ng-click="ctrl.setFilter('absent');">未交{{ctrl.data.numAbsent}}</a>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    <div ng-if="ctrl.viewType=='table'">
+        <table class="table table-striped">
+            <thead>
+                <!-- 表头部分 -->
+                <tr>
+                    <th class="col-sm-1">排名<span class="badge">{{ctrl.data.numStudent}}</span></a></th>
+                    <th class="col-sm-1">姓名</th>
+                    <th class="col-sm-1">学号</th>
+                    <th class="col-sm-1">IP</th>
+                    <th class="col-sm-1">上传时间</th>
+                    <th class="col-sm-1">查看</th>
+                </tr>
+            </thead>
+            <tbody>
+            <!-- 表的主体部分，对每一个用户对象来循环 -->
+            <tr ng-repeat="r in ctrl.dataGrid | orderBy:'uploadDate' track by r._id">
+                <td class="col-sm-1">{{:: $index+1 }}</td>
+                <td class="col-sm-1">{{:: r.name}}</td>
+                <td class="col-sm-1">{{:: r.code}}</td>
+                <td class="col-sm-1">{{:: r.ip}}</td>
+                <td class="col-sm-1">{{:: r.uploadDate | date:"yyyy-MM-dd HH:mm:ss"}}
+                    <a href="public/uploads/{{::r.fname}}" download="{{::r.fullname}}" target="_self"
+                       class="btn btn-xs btn-info"><i class="fa fa-download"></i>下载</a>
+                </td>
+                <td class="col-sm-1">
+                    <a ng-href="#" ng-click="ctrl.showDetails(r._id);" class="btn btn-sm btn-warning">
+                        明细
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div ng-if="ctrl.viewType=='list'">
+        <div class="col-sm-2" ng-if="ctrl.data" ng-repeat="r in ctrl.data.detail | filter: ctrl.filter">
+            <a ng-href="#" ng-click="ctrl.showFiles(r);" class="btn btn-default" ng-if="r.num>0"
+               title="查看{{::r.info.code}}, {{::r.info.name}}上交的作业明细">
+                {{::r.info.code}}<label ng-show="ctrl.showDetailName"> {{::r.info.name}}</label>[{{::r.num}}]
+            </a><a ng-href="#" class="btn btn-danger" ng-if="r.num<1">
+                {{::r.info.code}}<label ng-show="ctrl.showDetailName"> {{::r.info.name}}</label>[{{::r.num}}]
+            </a>
+        </div>
+    </div>
+
+    <!-- 显示IP签到异常信息的对话框 -->
+    <div class="modal fade" id="modalIPs">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">共发现 {{ctrl.ips.length}} 个IP重复提交作业现象：</h4>
+                </div>
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <div class="row" ng-repeat="r in ctrl.ips">
+                        <label>{{::r.ip}}</label>
+                        <div class="col-sm-4" ng-repeat="d in r.detail">
+                            <label class="btn btn-default">
+                                {{::d.code}} {{::d.name}}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--查看单据明细-->
+    <div class="modal fade" id="modalDetail">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">
+                        上交作业明细：{{ctrl.current.info.code}}, {{ctrl.current.info.name}}
+                    </h4>
+                </div>
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <!-- 表头部分 -->
+                        <tr>
+                            <th class="col-sm-1">序号<span class="badge">{{ctrl.current.file.length}}</span></a>
+                            </th>
+                            <th class="col-sm-1">文件名</th>
+                            <th class="col-sm-1">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody ng-if="ctrl.current.file">
+                        <!-- 表的主体部分，对每一个用户对象来循环 -->
+                        <tr ng-repeat="r in ctrl.current.file">
+                            <td class="col-sm-1">{{:: $index+1 }}</td>
+                            <td class="col-sm-1">{{:: r.fullname}}</td>
+                            <td>
+                                <a href="public/uploads/{{::r.fname}}" download="{{::r.fullname}}" target="_self"
+                                   class="btn btn-xs btn-info"><i class="fa fa-download"></i>下载</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

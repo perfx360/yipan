@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 设置名称和默认操作 -->
+<project name="YiPan" default="backupFull">
+	<!-- properies -->
+    <property file="build.properties" />
+    <tstamp>
+	     <format property="TODAY" pattern="yyyy-MM-dd_HH-mm-ss" />
+	     <format property="TODATE" pattern="yyyy-MM-dd" />
+	</tstamp>
+	
+	<!-- 拷贝整个目录到一个zip文件  -->
+	<target name="backup" description="备份数据(不含依赖包)">
+		<property name="destDir" value="D:\Codes\WebstormProjects" />
+		<mkdir dir="${destDir}"/>
+		<property name="pathToZip" value="${basedir}\.." />
+		<zip destfile="${destDir}/${project.name}.v${project.version}.${TODAY}.backup.zip" >
+			<zipfileset dir="${pathToZip}" 
+				includes="${project.name}/**"
+				excludes="${project.name}/node_modules/** ${project.name}/public/bower/** ${project.name}/public/uploads/** ${project.name}/logs/**"
+				defaultexcludes="no"/>
+		</zip>		
+    </target>
+
+    <target name="backupFull" description="全备份数据(含依赖包)">
+        <property name="destDir" value="D:\Codes\WebstormProjects" />
+        <mkdir dir="${destDir}"/>
+        <property name="pathToZip" value="${basedir}\.." />
+        <zip destfile="${destDir}/${project.name}.Full.v${project.version}.${TODAY}.backup.zip" >
+            <zipfileset dir="${pathToZip}"
+                        includes="${project.name}/**"
+                        excludes="${project.name}/public/uploads/** ${project.name}/logs/**"
+                        defaultexcludes="no"/>
+        </zip>
+    </target>
+
+    <!-- dump database to local files: mongodump -d hr -o data/backup -uadmin -pfaton.Fan -->
+    <target name="dump">
+  		<exec executable="mongodump">
+    		<arg value="-d"/>
+    		<arg value="yipan"/>
+    		<arg value="-uadmin"/>
+    		<arg value="-pmyl"/>
+    		<arg value="-o"/>
+    		<arg value="data\backup\${TODATE}\"/>
+  		</exec>
+	</target>
+    
+</project>

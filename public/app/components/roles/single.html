@@ -1,0 +1,169 @@
+<!-- 当个用户的视图，提供修改和新增两种功能  -->
+<div class="page-header">
+    <!-- 根据提供的操作类型role.type，决定显示哪个标题 -->
+    <h1 ng-if="ctrl.type == 'create'">新增角色</h1>
+    <h1 ng-if="ctrl.type == 'edit'">修改角色</h1>
+</div>
+
+<!--
+    定义一个表单，对应的处理办法是当前控制器定义的saveRole方法
+    由于修改和新增操作指定的控制器不同，saveRole方法也有不同实现
+ -->
+<form name='editForm' class="form-horizontal" ng-if="main.user.code=='admin'" ng-submit="ctrl.save(editForm)"
+        ng-if="ctrl.data._id">
+    <!-- 第一个可修改项，代号名称 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">代号</label>
+
+        <div class="col-sm-8">
+            <input type="text" class="form-control" name="code" ng-model="ctrl.data.code"
+                   ng-minlength="2" ng-required="true"
+                   ng-model-options="{updateOn: 'blur'}"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="角色代码，必填项，至少2位"
+                   placeholder="必填项，至少2位">
+
+            <span class="error-message" ng-if="editForm.code.$dirty && editForm.code.$error.required">
+                必填项</span>
+            <span class="error-message" ng-if="editForm.code.$dirty && editForm.code.$error.minlength">
+                长度至少2位</span>
+        </div>
+    </div>
+
+    <!-- 名称 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">名称</label>
+
+        <div class="col-sm-8">
+            <input type="text" class="form-control" name="name" ng-model="ctrl.data.name"
+                   ng-minlength="2" ng-required="true"
+                   ng-model-options="{updateOn: 'blur'}"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="角色名称，必填项，至少2位"
+                   placeholder="必填项，至少2位">
+            <span class="error-message" ng-if="editForm.name.$dirty && editForm.name.$error.required">
+                必填项</span>
+            <span class="error-message" ng-if="editForm.name.$dirty && editForm.name.$error.minlength">
+                长度至少2位</span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">备注</label>
+
+        <div class="col-sm-8">
+            <input type="text" class="form-control" ng-model="ctrl.data.remark">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label" ng-click="ctrl.permission.selectAll('supplier')">文件</label>
+
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.supplier.view"
+                   ng-click="ctrl.permission.cascade('supplier','view')"> 查看
+        </label>
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.supplier.update"
+                   ng-click="ctrl.permission.cascade('supplier','update')"> 修改
+        </label>
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.supplier.delete"
+                   ng-click="ctrl.permission.cascade('supplier','delete')"> 删除
+        </label>
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.supplier.create"> 增加
+        </label>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label" ng-click="ctrl.permission.selectAll('user')">用户</label>
+
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.user.view"
+                   ng-click="ctrl.permission.cascade('user','view')"> 查看
+        </label>
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.user.update"
+                   ng-click="ctrl.permission.cascade('user','update')"> 修改
+        </label>
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.user.delete"
+                   ng-click="ctrl.permission.cascade('user','delete')"> 删除
+        </label>
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.user.create"> 增加
+        </label>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label" ng-click="ctrl.permission.selectAll('role')">角色</label>
+
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.role.view"
+                   ng-click="ctrl.permission.cascade('role','view')"> 查看
+        </label>
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.role.update"
+                   ng-click="ctrl.permission.cascade('role','update')"> 修改
+        </label>
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.role.delete"
+                   ng-click="ctrl.permission.cascade('role','delete')"> 删除
+        </label>
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.role.create"> 增加
+        </label>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label" ng-click="ctrl.permission.selectAll('log')">日志</label>
+
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.log.view"
+                   ng-click="ctrl.permission.cascade('log','view')"> 查看
+        </label>
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.log.clear"
+                   ng-click="ctrl.permission.cascade('log','clear')"> 清空
+        </label>
+        <label class="btn col-sm-2 btn-default checkbox-inline">
+            <input type="checkbox" ng-model="ctrl.permission.permits.log.delete"
+                   ng-click="ctrl.permission.cascade('log','delete')"> 删除
+        </label>
+    </div>
+
+    <!-- 根据操作类型显示不同的提交按钮标签 -->
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-4">
+            <a ng-href="/roles" class="btn btn-info btn-lg btn-block">返回列表</a>
+        </div>
+        <div class="col-sm-4">
+            <button type="submit" class="btn btn-success btn-lg btn-block" ng-if="ctrl.type == 'create'">
+                创建
+            </button>
+            <button type="submit" class="btn btn-success btn-lg btn-block" ng-if="ctrl.type == 'edit'">
+                修改
+            </button>
+        </div>
+    </div>
+
+</form>
+
+<!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有role.message的时候 -->
+<div class="row show-hide-message" ng-if="ctrl.message">
+    <div class="col-sm-8 col-sm-offset-2">
+        <!-- -->
+        <div class="alert alert-success" ng-if="ctrl.isSuccess">
+            {{ ctrl.message }}
+        </div>
+        <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+            {{ ctrl.message }}
+        </div>
+
+    </div>
+</div>

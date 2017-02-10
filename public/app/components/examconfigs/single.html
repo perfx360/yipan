@@ -1,0 +1,232 @@
+<!-- 当个用户的视图，提供修改和新增两种功能  -->
+<div class="page-header">
+    <!-- 根据提供的操作类型user.type，决定显示哪个标题 -->
+    <h1 ng-if="ctrl.type == 'create'">新建考试</h1>
+    <h1 ng-if="ctrl.type == 'edit'">修改考试
+        [编号：<label>{{ctrl.data.code}}</label>]</h1>
+</div>
+
+<!--
+    定义一个表单，对应的处理办法是当前控制器定义的saveUser方法
+    由于修改和新增操作指定的控制器不同，saveUser方法也有不同实现
+ -->
+<form name='editForm' ng-if="main.user.code=='admin'" class="form-horizontal" ng-submit="ctrl.save(editForm)" novalidate>
+    <!-- 名称 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">名称</label>
+
+        <div class="col-sm-10">
+            <input type="text" class="form-control" name="name" ng-model="ctrl.data.name"
+                   ng-minlength="2" ng-required="true"
+                   ng-model-options="{updateOn: 'blur'}"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="考试名称，必填项，至少2位"
+                   placeholder="必填项，至少2位">
+            <span class="error-message" ng-if="editForm.name.$dirty && editForm.name.$error.required">
+                必填项</span>
+            <span class="error-message" ng-if="editForm.name.$dirty && editForm.name.$error.minlength">
+                长度至少2位</span>
+        </div>
+    </div>
+
+    <!-- 试卷,试卷套数 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">试卷</label>
+
+        <div class="col-sm-6 btn-group">
+            <button type="button" class="form-control" name="type"
+                    ng-model="ctrl.data.sheet"
+                    ng-required="true"
+                    title="试卷类型，单选，必填项"
+                    data-multiple="0" data-animation="am-flip-x"
+                    data-placeholder = "请选择试卷类型"
+                    bs-options="r._id as r.name for r in ctrl.sheets" bs-select>
+            </button>
+            <span class="error-message" ng-if="editForm.sheet.$dirty && editForm.sheet.$error.required">
+                必填项</span>
+        </div>
+
+        <label class="col-sm-2 control-label">试卷套数</label>
+
+        <div class="col-sm-2 btn-group">
+            <input type="number" class="form-control" ng-required="true"
+                   ng-model="ctrl.data.numTemplate"
+                   min="1" name="numTemplate" title="请输入试卷套数">
+        </div>
+    </div>
+
+    <!-- 学生模式-->
+    <div class="form-group">
+        <label class="col-sm-10 col-sm-offset-2">常见的匹配模式有：
+            |  同专业若干个班级     ^(20155611)
+            |  同年级若干个班级     ^(2015[5611|5511])
+            |  不同年级的若干个班级  ^(20155611|20131608)
+        </label>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">学生匹配模式</label>
+
+        <div class="col-sm-5">
+            <input type="text" class="form-control" name="pattern" ng-model="ctrl.data.pattern"
+                   ng-minlength="2" ng-required="true"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="学生匹配模式，必填项，至少2位"
+                   placeholder="必填项，至少2位">
+            <span class="error-message" ng-if="editForm.pattern.$dirty && editForm.pattern.$error.required">
+                必填项</span>
+            <span class="error-message" ng-if="editForm.pattern.$dirty && editForm.pattern.$error.minlength">
+                长度至少2位</span>
+        </div>
+
+        <div class="col-sm-2">
+            <button type="button" class="btn btn-info" ng-disabled='!ctrl.data.pattern'
+                    ng-click="ctrl.showInfo();"
+            >   人数</button>
+        </div>
+
+        <label class="col-sm-2 control-label">允许复卷</label>
+        <div class="col-sm-1">
+            <input type="checkbox" class="form-control" name="canReview" ng-model="ctrl.data.canReview"
+                   title="是否允许学生查看考过的试卷明细">
+        </div>
+    </div>
+
+    <!--ip限制模式-->
+    <div class="form-group">
+        <label class="col-sm-10 col-sm-offset-2">常见的ip模式有：
+            |  同一机房     10.64.45.*
+        </label>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">ip限制模式</label>
+
+        <div class="col-sm-5">
+            <input type="text" class="form-control" name="ipPattern" ng-model="ctrl.data.ipPattern"
+                   ng-minlength="2"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="ip匹配模式，至少2位"
+                   placeholder="至少2位">
+            <span class="error-message" ng-if="editForm.ipPattern.$dirty && editForm.ipPattern.$error.minlength">
+                长度至少2位</span>
+        </div>
+
+        <label class="col-sm-offset-2 col-sm-2 control-label">自动判卷</label>
+        <div class="col-sm-1">
+            <input type="checkbox" class="form-control" name="autoCorrect" ng-model="ctrl.data.autoCorrect"
+                   title="是否在学生交卷后自动判卷">
+        </div>
+    </div>
+
+    <!--开始结束考试时间，也可以输入以分钟为单位的考试时长-->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">考试日期</label>
+        <div class="col-sm-4">
+            <input type="date" title="设置考试开始的日期时间"
+                   class="form-control" ng-model="ctrl.date">
+        </div>
+        <label class="col-sm-1 control-label">提前(分)</label>
+        <div class="col-sm-2">
+            <input type="number" class="form-control"
+                   ng-model="ctrl.data.minAhead" max="20"
+                   min="0" name="minAhead" title="请输入允许提前进入考试的分钟数(最多20分钟)">
+        </div>
+        <label class="col-sm-1 control-label">时长(分)</label>
+        <div class="col-sm-2">
+            <input type="number" class="form-control"
+                   ng-model="ctrl.duration"
+                   ng-change="ctrl.adjustDate('duration');"
+                   min="0" name="duration"
+                   title="请输入考试时长的分钟数">
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">考试时间</label>
+        <div class="col-sm-4">
+            <input type="number" class="form-control"
+                   ng-model="ctrl.hourBegin" max="24"
+                   ng-change="ctrl.changeHour(true);"
+                   min="-1" title="请输入考试开始的小时数">
+        </div>
+        <label class="col-sm-1 control-label">时</label>
+        <div class="col-sm-4">
+            <input type="number" class="form-control"
+                   ng-model="ctrl.minBegin" max="60"
+                   ng-change="ctrl.changeMinute(true);"
+                   min="-1" title="请输入考试开始的分钟数">
+        </div>
+        <label class="col-sm-1 control-label">分</label>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-2 control-label">至</label>
+        <div class="col-sm-4">
+            <input type="number" class="form-control"
+                   ng-model="ctrl.hourEnd" max="24"
+                   ng-change="ctrl.changeHour(false);"
+                   min="-1" title="请输入考试结束的小时数">
+        </div>
+        <label class="col-sm-1 control-label">时</label>
+        <div class="col-sm-4">
+            <input type="number" class="form-control"
+                   ng-model="ctrl.minEnd" max="60"
+                   ng-change="ctrl.changeMinute(false);"
+                   min="-1" title="请输入考试结束的分钟数">
+        </div>
+        <label class="col-sm-1 control-label">分</label>
+    </div>
+
+    <!-- 备注-->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">备注</label>
+        <div class="col-sm-8">
+            <input type="text" class="form-control" name="remark" ng-model="ctrl.data.remark"
+                   title="试题的备注信息" placeholder="这里可以输入备注信息">
+        </div>
+        <label class="col-sm-1 control-label">试卷检测</label>
+        <div class="col-sm-1">
+            <input type="checkbox" class="form-control" name="isFull" ng-model="ctrl.data.isFull"
+                   title="是否用于试卷检测，试卷检测时试题的每种可能的样式都会生成一道考题，便于检查试题库的完整情况">
+        </div>
+    </div>
+
+    <!-- 根据操作类型显示不同的提交按钮标签 -->
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-4">
+            <a ng-href="/examconfigs" class="btn btn-info btn-lg btn-block">返回列表</a>
+        </div>
+        <div class="col-sm-4">
+            <!-- 后台加载过程结束了，就显示按钮可点击的状态，加载过程可能是加载显示数据，如角色列表，
+                或者是点击新建后的提交动作，这样可以避免重复提交 -->
+            <button type="submit" class="btn btn-success btn-lg btn-block"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && !ctrl.processing">
+                新建</button>
+            <!--正在加载，就显示一个繁忙图标-->
+            <button type="submit" class="btn btn-success btn-lg btn-block disabled"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && ctrl.processing">
+                新建<span class="glyphicon glyphicon-repeat"></span></button>
+            <button type="submit" class="btn btn-success btn-lg btn-block"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type !== 'create' && !ctrl.processing">
+                修改</button>
+            <!--正在加载，就显示一个繁忙图标-->
+            <button type="submit" class="btn btn-success btn-lg btn-block disabled"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type !== 'create' && ctrl.processing">
+                修改<span class="glyphicon glyphicon-repeat"></span></button>
+        </div>
+    </div>
+
+    <!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+    <div class="row show-hide-message hidden-print" ng-if="ctrl.message">
+        <div class="col-sm-12">
+            <!-- -->
+            <div class="alert alert-success" ng-if="ctrl.isSuccess">
+                {{ ctrl.message }}
+            </div>
+            <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+                {{ ctrl.message }}
+            </div>
+
+        </div>
+    </div>
+</form>

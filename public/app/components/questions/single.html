@@ -1,0 +1,308 @@
+<!-- 当个用户的视图，提供修改和新增两种功能  -->
+<div class="page-header">
+    <!-- 根据提供的操作类型user.type，决定显示哪个标题 -->
+    <h1 ng-if="ctrl.type == 'create'">新建试题</h1>
+    <h1 ng-if="ctrl.type == 'edit'">修改试题
+        [编号：<label>{{ctrl.data.code}}</label>]
+    </h1>
+</div>
+
+<!--
+    定义一个表单，对应的处理办法是当前控制器定义的saveUser方法
+    由于修改和新增操作指定的控制器不同，saveUser方法也有不同实现
+ -->
+<form name='editForm' ng-if="main.user.code=='admin'" class="form-horizontal" ng-submit="ctrl.save(editForm)" novalidate>
+    <!-- 类属 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">类属</label>
+
+        <div class="col-sm-5 btn-group">
+            <button type="button" class="form-control" name="category"
+                    ng-model="ctrl.data.category"
+                    ng-required="true"
+                    title="试题类属，如章节、知识点等，单选，必填项"
+                    data-multiple="0" data-animation="am-flip-x"
+                    data-placeholder = "请选择类属"
+                    bs-options="r._id as r.name for r in ctrl.categorys" bs-select>
+            </button>
+            <span class="error-message" ng-if="editForm.category.$dirty && editForm.category.$error.required">
+                必填项</span>
+        </div>
+
+        <label class="col-sm-1 control-label">类型</label>
+
+        <div class="col-sm-2 btn-group">
+            <button type="button" class="form-control" name="type"
+                    ng-model="ctrl.data.type"
+                    ng-required="true"
+                    title="试题类型，单选，必填项"
+                    data-multiple="0" data-animation="am-flip-x"
+                    data-placeholder = "请选择类型"
+                    bs-options="r for r in ctrl.types" bs-select>
+            </button>
+            <span class="error-message" ng-if="editForm.type.$dirty && editForm.type.$error.required">
+                必填项</span>
+        </div>
+
+        <label class="col-sm-1 control-label">分值</label>
+
+        <div class="col-sm-1 btn-group">
+            <input type="number" class="form-control" ng-required="true" ng-model="ctrl.data.point"
+                   min="1" name="point" placeholder="请输入试题分值">
+        </div>
+    </div>
+
+    <!-- 备注-->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">备注</label>
+        <div class="col-sm-10">
+            <input type="text" class="form-control" name="remark" ng-model="ctrl.data.remark"
+                   title="试题的备注信息" placeholder="这里可以输入备注信息">
+        </div>
+    </div>
+
+    <!-- 根据操作类型显示不同的提交按钮标签 -->
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-4">
+            <a ng-href="/questions" class="btn btn-info btn-lg btn-block">返回列表</a>
+        </div>
+        <div class="col-sm-4">
+            <!-- 后台加载过程结束了，就显示按钮可点击的状态，加载过程可能是加载显示数据，如角色列表，
+                或者是点击新建后的提交动作，这样可以避免重复提交 -->
+            <button type="submit" class="btn btn-success btn-lg btn-block"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && !ctrl.processing">
+                新建</button>
+            <!--正在加载，就显示一个繁忙图标-->
+            <button type="submit" class="btn btn-success btn-lg btn-block disabled"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && ctrl.processing">
+                新建<span class="glyphicon glyphicon-repeat"></span></button>
+            <button type="submit" class="btn btn-success btn-lg btn-block"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type !== 'create' && !ctrl.processing">
+                修改</button>
+            <!--正在加载，就显示一个繁忙图标-->
+            <button type="submit" class="btn btn-success btn-lg btn-block disabled"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type !== 'create' && ctrl.processing">
+                修改<span class="glyphicon glyphicon-repeat"></span></button>
+        </div>
+    </div>
+
+    <!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+    <div class="row show-hide-message hidden-print" ng-if="ctrl.message">
+        <div class="col-sm-12">
+            <!-- -->
+            <div class="alert alert-success" ng-if="ctrl.isSuccess">
+                {{ ctrl.message }}
+            </div>
+            <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+                {{ ctrl.message }}
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 试题式样表 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">样式<span class="badge">{{ctrl.data.form.length}}</span></label>
+        <div class="col-sm-2">
+            <a href="#" class="btn btn-primary hidden-print" title="增加一个空白样式"
+                    ng-click="ctrl.addForm();">
+                <span class="glyphicon glyphicon-plus"></span>
+                新增
+            </a>
+        </div>
+    </div>
+    <table class="table table-bordered table-striped" ng-repeat="r in ctrl.data.form">
+        <tbody>
+        <!-- 表的主体部分，对每一个用户对象来循环 -->
+        <tr style="background-color:#bbe4d9">
+            <td class="col-sm-1">序号</td>
+            <td class="col-sm-1">{{$index+1}}</td>
+            <td class="col-sm-7"></td>
+            <td class="col-sm-1">
+                <a href="#" ng-click="ctrl.addForm(r,$index);" class="btn btn-success" title="复制成一个新式样"><i class="fa fa-copy"></i></a>
+            </td><td class="col-sm-1">
+            <a href="#" ng-click="ctrl.showImageDialog(r);" class="btn btn-warning" title="插入图片"><i class="fa fa-image"></i></a>
+            </td><td class="col-sm-1">
+                <a href="#" ng-show="ctrl.data.form.length>1" ng-click="ctrl.delete($index);" class="btn btn-danger" title="删除这个式样"><span class="glyphicon glyphicon-minus"></span></a>
+            </td>
+        </tr>
+        <tr>
+            <td>题干
+                <a href="#" ng-show="!r.showHTML" ng-click="r.showHTML=true;" class="btn btn-default" title="打开HTML编辑框"><i class="fa fa-edit"></i></a>
+            </td>
+            <td colspan="5">
+                <!--<input class="form-control" type="text" ng-model="r.desc" placeholder="请输入试题的题干部分">-->
+                <p meditor ng-model="r.desc" title="点击可以进入修改模式" ></p>
+            </td>
+        </tr>
+        <tr ng-if="r.showHTML">
+            <td>
+                <a href="#" ng-click="r.showHTML=false;" class="btn btn-xs btn-default" title="隐藏HTML编辑框"><i class="fa fa-eye-slash"></i></a>
+                <a href="#" ng-click="ctrl.showCode(r);" class="btn btn-xs btn-info" title="打开插入源代码对话框"><i class="fa fa-code"></i></a>
+            </td>
+            <td colspan="5">
+                <textarea rows="10" class="form-control" eb-caret="ctrl.caret"  ng-model="r.desc"></textarea>
+            </td>
+        </tr>
+        <tr ng-if="r.images && r.images.length>0">
+            <td>图片</td>
+            <td colspan="5">
+                <div class="col-sm-3" ng-repeat="item in r.images">
+                    <div class="thumbnail">
+                        <a href="#" ng-click="ctrl.showImage(item);">
+                            <img ng-src="public/uploads/{{item}}">
+                        </a>
+                        <a href="#" class="btn btn-xs btn-danger" ng-click="ctrl.removeImage(r,$index);">
+                            <i class="fa fa-trash"></i>删除
+                        </a>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>正确答案</td>
+            <td colspan="5">候选答案</td>
+        </tr>
+        <tr ng-repeat="a in r.ans">
+            <td>
+                <!-- 显示一个checkbox和input获取用户给定的备选答案和是否正确答案的选择-->
+                <input type="checkbox" ng-change="ctrl.checkValid(r,a);" ng-model="a.isValid">
+            </td>
+            <td colspan="5">
+                <input type="text" class="form-control" ng-model="a.desc" placeholder="请输入候选答案">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</form>
+
+<style>
+    .my-drop-zone { border: dotted 3px lightgray; }
+    .nv-file-over { border: dotted 3px red; } /* Default class applied to drop zones on over */
+</style>
+
+<!--添加图片选择框-->
+<div class="modal fade" id="modalImage">
+    <div class="modal-dialog" style="width:auto;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h2 class="modal-title">添加图片</h2>
+                <input type="file" nv-file-select uploader="ctrl.uploader" multiple  /><br/>
+                <div ng-if="ctrl.uploader.isHTML5">
+                    <div nv-file-drop="" uploader="ctrl.uploader">
+                        <div nv-file-over="" uploader="ctrl.uploader" over-class="nv-file-over" class="well my-drop-zone">
+                            <h3><em> 或者请将要上传的图片拖至这里</em></h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-if="ctrl.imageUploading">
+                    上传进度
+                    <div class="progress" style="">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-success" role="progressbar"
+                                 aria-valuenow="{{ctrl.uploader.progress}}"
+                                 aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: {{ctrl.uploader.progress}}%;">
+                                {{ctrl.uploader.progress}}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+                <div class="row show-hide-message" ng-if="ctrl.message">
+                    <div class="col-sm-6 col-sm-offset-2">
+                        <!-- -->
+                        <div class="alert alert-success" ng-if="ctrl.isSuccess">
+                            {{ ctrl.message }}
+                        </div>
+                        <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+                            {{ ctrl.message }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 视图控制按钮-->
+                <div class="row">
+                    <!--左侧是目录选择结构-->
+                    <div class="col-sm-3">
+                        <div treecontrol class="tree-classic"
+                             tree-model="ctrl.tree.data"
+                             options="ctrl.tree.options"
+                             selected-node="ctrl.tree.selected"
+                             expanded-nodes="ctrl.tree.expanded"
+                             on-selection="ctrl.treeSelected(node, selected)"
+                             on-node-toggle="ctrl.treeToggle(node, expanded)"
+                        >
+                            {{node.label}}
+                        </div>
+                    </div>
+                    <!--右侧是图片显示框-->
+                    <div class="col-sm-9">
+                        <a href="#" class="btn btn-primary col-sm-12" ng-if="ctrl.imageSelectMode=='single'" ng-click="ctrl.setImageSelectMode('multi');">
+                            <i class="fa fa-check-square-o"></i>换到多选
+                        </a>
+                        <a href="#" class="btn btn-info col-sm-4 col-sm-offset-1" ng-if="ctrl.imageSelectMode=='multi'" ng-click="ctrl.setImageSelectMode('single');">
+                            <i class="fa fa-check-circle-o"></i>换到单选
+                        </a><a href="#" class="btn btn-success col-sm-4 col-sm-offset-2" ng-if="ctrl.imageSelectMode=='multi'" ng-click="ctrl.selectImage();">
+                            <i class="fa fa-check"></i>选定
+                        </a>
+                        <div class="col-sm-3" ng-repeat="item in ctrl.images">
+                            <div class="thumbnail">
+                                <a href="#" ng-click="ctrl.showImage(item);" title="{{item.name}}.{{item.extension}}">
+                                    <img ng-src="public/uploads/{{item.fname}}">
+                                </a>
+                                <a href="#" class="btn btn-xs btn-success" ng-click="ctrl.selectImage(item.fname);"
+                                   ng-if="ctrl.imageSelectMode=='single'">
+                                    <i class="fa fa-check"></i>选定
+                                </a><a href="#" class="btn btn-xs btn-info" ng-model="item.isSelected" ng-click="item.isSelected=true;"
+                                   ng-if="ctrl.imageSelectMode=='multi' && !item.isSelected">
+                                    <i class="fa fa-check"></i>选定
+                                </a><a href="#" class="btn btn-xs btn-danger" ng-model="item.isSelected" ng-click="item.isSelected=false;"
+                                   ng-if="ctrl.imageSelectMode=='multi' && item.isSelected">
+                                    <i class="fa fa-trash"></i>取消
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--显示图片大图对话框-->
+<div class="modal fade" id="modalShowImage">
+    <div class="modal-dialog" style="width:auto;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h3 class="modal-title" ng-if="ctrl.image">{{ctrl.image.name}}</h3>
+                <h6 class="modal-title" ng-if="ctrl.image">ID= {{ctrl.image._id}}， 类型= {{ctrl.image.extension}}， 位置= {{ctrl.tree.currentPath}}</h6>
+            </div>
+            <div class="modal-body">
+                <input type="range" id="scale-range" min="0.5" max="3.0" step="0.01" value="1.0" style="display:block;margin:10px auto;width:320px"/>
+                <canvas id="canvas" style="display:block;margin:0 auto;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--插入源代码对话框-->
+<div class="modal fade" id="modalCode">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h3 class="modal-title">插入源代码<a href="#" ng-click="ctrl.insertCode();" class="btn btn-lg btn-success" title="插入源代码">完成</a></h3>
+            </div>
+            <div class="modal-body">
+                <textarea class="form-control" ng-trim="true" autofocus rows="10" ng-model="ctrl.givenCode"></textarea>
+            </div>
+        </div>
+    </div>
+</div>

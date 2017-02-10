@@ -1,0 +1,181 @@
+<!-- 当个用户的视图，提供修改和新增两种功能  -->
+<div class="page-header">
+    <!-- 根据提供的操作类型user.type，决定显示哪个标题 -->
+    <h1 ng-if="ctrl.type == 'create'">组新试卷</h1>
+    <h1 ng-if="ctrl.type == 'edit'">修改试卷
+        [编号：<label>{{ctrl.data.code}}</label>]</h1>
+</div>
+
+<!--
+    定义一个表单，对应的处理办法是当前控制器定义的saveUser方法
+    由于修改和新增操作指定的控制器不同，saveUser方法也有不同实现
+ -->
+<form name='editForm' ng-if="main.user.code=='admin'" class="form-horizontal" ng-submit="ctrl.save(editForm)" novalidate>
+    <!-- 用户名 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">名称</label>
+
+        <div class="col-sm-6">
+            <input type="text" class="form-control" name="name" ng-model="ctrl.data.name"
+                   ng-minlength="2" ng-required="true"
+                   ng-model-options="{updateOn: 'blur'}"
+                   data-toggle="tooltip"
+                   data-placement="right"
+                   title="签到名称，必填项，至少2位"
+                   placeholder="必填项，至少2位">
+            <span class="error-message" ng-if="editForm.name.$dirty && editForm.name.$error.required">
+                必填项</span>
+            <span class="error-message" ng-if="editForm.name.$dirty && editForm.name.$error.minlength">
+                长度至少2位</span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-2 control-label">备注</label>
+        <div class="col-sm-6">
+            <input type="text" class="form-control" name="remark" ng-model="ctrl.data.remark"
+                   title="试卷的备注信息">
+        </div>
+    </div>
+
+    <!-- 根据操作类型显示不同的提交按钮标签 -->
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-3">
+            <a ng-href="/sheets" class="btn btn-info btn-lg btn-block">返回列表</a>
+        </div>
+        <div class="col-sm-3">
+            <!-- 后台加载过程结束了，就显示按钮可点击的状态，加载过程可能是加载显示数据，如角色列表，
+                或者是点击新建后的提交动作，这样可以避免重复提交 -->
+            <button type="submit" class="btn btn-success btn-lg btn-block"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && !ctrl.processing">
+                新建</button>
+            <!--正在加载，就显示一个繁忙图标-->
+            <button type="submit" class="btn btn-success btn-lg btn-block disabled"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && ctrl.processing">
+                新建<span class="glyphicon glyphicon-repeat"></span></button>
+            <button type="submit" class="btn btn-success btn-lg btn-block"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type !== 'create' && !ctrl.processing">
+                修改</button>
+            <!--正在加载，就显示一个繁忙图标-->
+            <button type="submit" class="btn btn-success btn-lg btn-block disabled"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type !== 'create' && ctrl.processing">
+                修改<span class="glyphicon glyphicon-repeat"></span></button>
+        </div>
+    </div>
+
+    <!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+    <div class="row show-hide-message" ng-if="ctrl.message">
+        <div class="col-sm-6 col-sm-offset-2">
+            <!-- -->
+            <div class="alert alert-success" ng-if="ctrl.isSuccess">
+                {{ ctrl.message }}
+            </div>
+            <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+                {{ ctrl.message }}
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 试题式样表 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">组成明细</label>
+        <label class="col-sm-4 btn btn-default" ng-if="ctrl.data.detail.length>0 && !ctrl.statError">{{ctrl.statString}}</label>
+        <label class="col-sm-4 btn btn-danger" ng-if="ctrl.data.detail.length>0 && ctrl.statError">{{ctrl.statString}}</label>
+
+        <div class="col-sm-2 col-sm-offset-1">
+            <a href="#" class="btn btn-warning hidden-print" ng-click="ctrl.reset();">
+                <span class="glyphicon glyphicon-trash"></span>重置
+            </a>
+        </div>
+        <div class="col-sm-2 col-sm-offset-1">
+            <a href="#" class="btn btn-primary hidden-print" ng-click="ctrl.showImport();">
+                <span class="glyphicon glyphicon-import"></span>批量导入
+            </a>
+        </div>
+    </div>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+        <!-- 表头部分 -->
+        <tr>
+            <th class="col-sm-2 hidden-print">序号<span class="badge">{{ctrl.data.detail.length}}</span></th>
+            <th class="col-sm-5 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('category.name')"
+                 title="单击按类属排序，再次单击反序">类属</a>
+            </th>
+            <th class="col-sm-2 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('type')"
+                 title="单击按类型排序，再次单击反序">类型</a>
+            </th><th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('num')"
+                 title="单击按题目数排序，再次单击反序">题目数</a>
+            </th>
+            <th class="col-sm-2 hidden-print">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- 表的主体部分，对每一个用户对象来循环 -->
+        <tr ng-repeat="r in ctrl.data.detail | orderBy: ctrl.sortKey">
+            <td>{{:: $index+1}}</td>
+            <td>{{:: r.category.name }}</td>
+            <td>{{:: r.type }}</td>
+            <td><input type="number" class="form-control" ng-model="r.num"
+                       ng-change="ctrl.stat();"
+                min="1" ng-max="{{r.max}}" name="num" placeholder="请输入试题数量"></td>
+            <!-- 每一行末尾显示修改和删除两个选择 -->
+            <td>
+                <a href="#" ng-click="ctrl.data.detail.splice($index,1);" class="btn btn-danger">删除</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+
+<!-- Modal Markup kept out of all the div elements -->
+<div class="modal fade" id="modalImport">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">请选择导入试题的类属和类型？
+                    <a href="#" ng-click="ctrl.refresh();" class="btn btn-primary"
+                       ng-disabled="ctrl.processingImport" title="刷新试题库信息"><i class="fa fa-refresh"></i>刷新</a>
+                    <a href="#" ng-click="ctrl.import();" class="btn btn-success"
+                       title="导入到试卷组成明细中"><i class="fa fa-calendar-check-o"></i>确定</a>
+                </h4>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                    <!-- 表头部分 -->
+                    <tr>
+                        <th class="col-sm-1">序号<span class="badge">{{ctrl.importData.length}}</span></th>
+                        <th class="col-sm-5">类属</th>
+                        <th class="col-sm-2" ng-repeat="t in ctrl.types"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- 表的主体部分，对每一个用户对象来循环 -->
+                    <tr ng-repeat="r in ctrl.importData | orderBy : 'category.name'">
+                        <td>{{:: $index+1}}</td>
+                        <td>{{:: r.category.name }}</td>
+                        <!-- 遍历所有类型-->
+                        <td ng-repeat="t in ctrl.types">
+                            <!-- 如果这类类型存在，则显示类型名字和试题数目-->
+                            <div ng-if="r[t]">
+                                <input type="checkbox" ng-model="r[t].selected">
+                                {{::t}}<span class="badge">{{::r[t].num}}</span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+

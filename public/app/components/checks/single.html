@@ -1,0 +1,125 @@
+<!-- 当个用户的视图，提供修改和新增两种功能  -->
+<div class="page-header">
+    <h1 ng-if="ctrl.type=='create'">发起新抽查</h1>
+    <h1 ng-if="ctrl.type=='edit'">抽查明细</h1>
+</div>
+
+<!--
+    定义一个表单，对应的处理办法是当前控制器定义的saveUser方法
+    由于修改和新增操作指定的控制器不同，saveUser方法也有不同实现
+ -->
+<form name='editForm' ng-if="main.user.code=='admin'" class="form-horizontal" ng-submit="ctrl.check(editForm);" novalidate>
+    <!-- 签到对象 -->
+    <div class="form-group">
+        <label class="col-sm-2 control-label">抽查对象</label>
+
+        <div class="col-sm-4 btn-group">
+            <button type="button" class="form-control" name="type"
+                    ng-model="ctrl.data.signgroup"
+                    ng-required="true"
+                    ng-disabled="ctrl.type=='edit'"
+                    title="抽查对象类型，单选，必填项"
+                    data-multiple="0" data-animation="am-flip-x"
+                    data-placeholder = "请选择抽查对象"
+                    bs-options="r._id as r.name for r in ctrl.signgroups" bs-select>
+            </button>
+            <span class="error-message" ng-if="editForm.signgroup.$dirty && editForm.signgroup.$error.required">
+                必填项</span>
+        </div>
+
+        <label class="col-sm-1 control-label">抽查人数</label>
+
+        <div class="col-sm-2 btn-group">
+            <input type="number" class="form-control" ng-required="true"
+                   ng-disabled="ctrl.type=='edit'"
+                   ng-model="ctrl.data.numExpected"
+                   min="1" name="numExpected" title="请输入抽查人数">
+        </div>
+
+        <label class="col-sm-1 control-label">累积抽查</label>
+        <div class="col-sm-1">
+            <input ng-disabled="ctrl.type=='edit'" type="checkbox" class="form-control" name="isAccumulated" ng-model="ctrl.data.isAccumulated"
+                   title="是否是累积抽查，即是否考虑以往抽查结果，确保各人抽查几率相等">
+        </div>
+    </div>
+
+    <!-- 根据操作类型显示不同的提交按钮标签 -->
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-4">
+            <a ng-href="/checks" class="btn btn-info btn-lg btn-block">返回列表</a>
+        </div>
+        <div class="col-sm-4">
+            <!-- 后台加载过程结束了，就显示按钮可点击的状态，加载过程可能是加载显示数据，如角色列表，
+                或者是点击新建后的提交动作，这样可以避免重复提交 -->
+            <button type="submit" class="btn btn-success btn-lg btn-block"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && !ctrl.processing">
+                抽查</button>
+            <!--正在加载，就显示一个繁忙图标-->
+            <button type="submit" class="btn btn-success btn-lg btn-block disabled"
+                    ng-disabled='!editForm.$valid' ng-if="ctrl.type == 'create' && ctrl.processing">
+                抽查<span class="glyphicon glyphicon-repeat"></span></button>
+        </div>
+    </div>
+
+    <!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+    <div class="row show-hide-message hidden-print" ng-if="ctrl.message">
+        <div class="col-sm-12">
+            <!-- -->
+            <div class="alert alert-success" ng-if="ctrl.isSuccess">
+                {{ ctrl.message }}
+            </div>
+            <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+                {{ ctrl.message }}
+            </div>
+
+        </div>
+    </div>
+</form>
+
+<h4 ng-if="ctrl.data.detail">抽查结果
+    <a href="#" class="btn btn-xs btn-primary hidden-print" ng-click="ctrl.save();" ng-disabled="ctrl.data.detail.length<1">
+        <i class="fa fa-save"></i>
+        保存
+    </a>
+    <a ng-if="ctrl.type=='create'" href="#" class="btn btn-xs btn-warning hidden-print" ng-click="ctrl.addDetail();">
+        <i class="fa fa-plus-circle"></i>
+        新增
+    </a>
+</h4>
+<table class="table table-striped" ng-if="ctrl.data.detail">
+    <thead>
+    <!-- 表头部分 -->
+    <tr>
+        <th class="col-sm-1">序号<span class="badge">{{ctrl.data.detail.length}}</span></th>
+        <th class="col-sm-1"><a ng-href="#" ng-click="ctrl.setSort('code');" title="单击按学号排序，再次单击反序">学号</a></th>
+        <th class="col-sm-1"><a ng-href="#" ng-click="ctrl.setSort('name');" title="单击按姓名排序，再次单击反序">姓名</a></th>
+        <th class="col-sm-1">批注历史</th>
+        <th class="col-sm-1">新增批注</th>
+        <th class="col-sm-1" ng-if="ctrl.type=='create'">删除</th>
+        <th class="col-sm-1">用户明细</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 表的主体部分，对每一个用户对象来循环 -->
+    <tr ng-repeat="r in ctrl.data.detail| orderBy: ctrl.sortCol track by $index">
+        <td class="col-sm-1">{{:: $index+1}}</td>
+        <td class="col-sm-2">{{ r.code }}</td>
+        <td class="col-sm-2"><a ng-href="/users/{{:: r._id }}" target="_blank" title="修改该用户">{{ r.name }}</a></td>
+        <td class="col-sm-2">{{:: r.marksString }}</td>
+        <td class="col-sm-3" ng-if="ctrl.type=='create'">
+            <input type="text" class="form-control" ng-model="r.mark">
+        </td><td class="col-sm-6" ng-if="ctrl.type=='edit'">
+            <input type="text" class="form-control" ng-model="r.mark">
+        </td>
+        <td class="col-sm-1" ng-if="ctrl.type=='create'">
+            <a href="#" ng-click="ctrl.deleteDetail(r);"
+               class="btn btn-xs btn-danger" title="从抽查结果中删除这个学生"
+            ><i class="fa fa-remove"></i></a>
+        </td><td class="col-sm-1">
+            <a href="/users/{{r._id}}" target="_blank"
+               class="btn btn-xs btn-info" title="查看这个学生的详细信息"
+            ><i class="fa fa-search-plus"></i></a>
+        </td>
+    </tr>
+    </tbody>
+</table>

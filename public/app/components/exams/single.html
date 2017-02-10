@@ -1,0 +1,192 @@
+<!-- 当个用户的视图，提供修改和新增两种功能  -->
+<style type="text/css">
+    body {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+</style>
+
+<div class="page-header">
+    <!-- 根据提供的操作类型user.type，决定显示哪个标题 -->
+    <h1 ng-if="ctrl.type == 'view'">阅卷
+        <a href="/exams" class="btn btn-primary hidden-print">
+            返回考试列表
+        </a>
+    </h1>
+    <h1 ng-if="ctrl.type == 'test'">考试
+    </h1>
+    <!--考试信息-->
+    <h4>考试名称：{{::ctrl.data.config.name}}，考试时段：{{::ctrl.data.config.dateBegin | date:'yyyy-MM-dd HH:mm'}} - {{::ctrl.data.config.dateEnd | date:'HH:mm'}} ，总分：{{ctrl.data.point}}
+        <label ng-if="ctrl.type=='view'">，得分：{{::ctrl.data.score}}</label></h4>
+    <h4 ng-if="main.user.code=='admin'"> 考生：{{ctrl.data.tester.name}}, {{ctrl.data.tester.code}}</h4>
+</div>
+
+<div class="jumbotron text-center hidden-print" ng-if="ctrl.isSubmitting">
+    <span class="glyphicon glyphicon-repeat spinner"></span>
+    <p>正在提交试卷，请稍候 ...</p>
+    <p><b>请不要关闭或者刷新浏览器</b></p>
+</div>
+<div ng-show="!ctrl.isSubmitting">
+    <!--筛选框，允许通过试题类型进行筛选-->
+    <div class="row">
+        <div class="col-sm-3" ng-if="ctrl.type=='test'">
+            <a ng-show="!ctrl.isSubmitting" href="#" ng-click="ctrl.submit(false);"
+               class="{{ctrl.submitClass[ctrl.isLastMinutes]}}" title="交卷，注意交卷以后不能再修改！">
+                提交试卷，[剩余时间：{{ctrl.restTimeString}}]
+            </a>
+        </div>
+        <div class="col-sm-1" ng-repeat="r in ctrl.types">
+            <a class="btn btn-info" ng-if="ctrl.current.type==r"
+                ng-click="ctrl.showType(r);"
+            >{{::r}}<span class="badge">{{ctrl.stat[r].num}}/{{::ctrl.stat[r].total}}</span></a>
+            <a class="btn btn-default btn-xs" ng-if="ctrl.current.type!=r"
+               ng-click="ctrl.showType(r);"
+            >{{::r}}<span class="badge">{{ctrl.stat[r].num}}/{{::ctrl.stat[r].total}}</span></a>
+        </div>
+        <div class="col-sm-1" ng-if="ctrl.type=='test' && ctrl.current.type=='单选'">
+            <a class="btn btn-default" ng-click="ctrl.setAutoGoto(true);" ng-if="!ctrl.autoGoto" title="在答题后不自动跳转到下一题">不自动跳题</a>
+            <a class="btn btn-success" ng-click="ctrl.setAutoGoto(false);" ng-if="ctrl.autoGoto" title="在答题后自动跳转到下一题">自动跳题</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-1">
+            <a class="btn btn-warning" ng-click="ctrl.goto(-1);"><i class="fa fa-arrow-circle-left"></i>上一题</a>
+        </div>
+        <div class="col-sm-10">
+            <a ng-click="ctrl.showQuestion(r.index);"
+               ng-repeat="r in ctrl.questions[ctrl.current.type]"
+               class="{{ctrl.class[r.index==ctrl.current.index][r.hasAnswered]}}"
+               ng-if="ctrl.type == 'test'" >
+                {{::r.index+1}}</a>
+            <a ng-click="ctrl.showQuestion(r.index);"
+               ng-repeat="r in ctrl.questions[ctrl.current.type]"
+               class="{{ctrl.class[r.index==ctrl.current.index][r.isWrong]}}"
+               ng-if="ctrl.type == 'view'" >
+                {{::r.index+1}}</a>
+        </div>
+        <div class="col-sm-1">
+            <a class="btn btn-warning" ng-click="ctrl.goto(1);"><i class="fa fa-arrow-circle-right"></i>下一题</a>
+        </div>
+    </div>
+
+    <!-- 禁止拷贝考题和代码 -->
+    <div class="jumbotron"
+         oncontextmenu="return false"
+         ondragstart="return false"
+         onselectstart ="return false"
+         onbeforecopy="return false"
+         onselect="if(document.selection)document.selection.empty();"
+         oncopy="if(document.selection)document.selection.empty();"
+         onmouseup="if(document.selection)document.selection.empty();"
+    >
+        <label class="btn btn-xs btn-default" title="id:{{ctrl.current.question.qid}}">{{ctrl.current.type}} 第{{ctrl.current.index + 1}}题 共{{ctrl.current.question.point}}分</label>[{{ctrl.current.question.code}}]
+        <h2>
+            <p ng-bind-html="ctrl.current.question.desc"></p>
+        </h2>
+
+        <div class="row" ng-repeat="item in ctrl.current.question.images">
+            <div class="thumbnail">
+                <a href="#" ng-click="ctrl.showImage(item);">
+                    <img ng-src="public/uploads/{{item}}">
+                </a>
+            </div>
+        </div>
+
+        <table class="table table-condensed table-striped" ng-if="ctrl.type=='test'">
+            <thead>
+            <tr>
+                <th class="col-sm-1">你的选择</th>
+                <th class="col-sm-10">答案选项</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="r in ctrl.current.question.ans">
+                <td>
+                    <input type="checkbox" ng-model="r.isSelected"
+                           ng-click="ctrl.answer($index);">
+                </td>
+                <td>{{r.desc}}</td>
+            </tr>
+            </tbody>
+        </table>
+        <table class="table table-condensed table-striped" ng-if="ctrl.type=='view'">
+            <thead>
+            <tr>
+                <th class="col-sm-1">参考答案</th>
+                <th class="col-sm-1">你的选择</th>
+                <th class="col-sm-10">答案选项</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="r in ctrl.current.question.ans" ng-class="(r.isWrong)?'success text-danger':''">
+                <td><label ng-if="r.isExpected"><i class="fa fa-check-circle-o"></i></label></td>
+                <td>
+                    <label ng-if="r.isSelected"><i class="fa fa-check-circle"></i></label>
+                </td>
+                <td>{{r.desc}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-1">
+            <a class="btn btn-warning" ng-click="ctrl.goto(-1);"><i class="fa fa-arrow-circle-left"></i>上一题</a>
+        </div>
+        <div class="col-sm-10">
+            <a ng-click="ctrl.showQuestion(r.index);"
+               ng-repeat="r in ctrl.questions[ctrl.current.type]"
+               class="{{ctrl.class[r.index==ctrl.current.index][r.hasAnswered]}}"
+               ng-if="ctrl.type == 'test'" >
+                {{::r.index+1}}</a>
+            <a ng-click="ctrl.showQuestion(r.index);"
+               ng-repeat="r in ctrl.questions[ctrl.current.type]"
+               class="{{ctrl.class[r.index==ctrl.current.index][r.isWrong]}}"
+               ng-if="ctrl.type == 'view'" >
+                {{::r.index+1}}</a>
+        </div>
+        <div class="col-sm-1">
+            <a class="btn btn-warning" ng-click="ctrl.goto(1);"><i class="fa fa-arrow-circle-right"></i>下一题</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-3" ng-if="ctrl.type=='test'">
+            <a ng-show="!ctrl.isSubmitting" href="#" ng-click="ctrl.submit(false);"
+               class="{{ctrl.submitClass[ctrl.isLastMinutes]}}" title="交卷，注意交卷以后不能再修改！">
+                提交试卷，[剩余时间：{{ctrl.restTimeString}}]
+            </a>
+        </div>
+        <div class="col-sm-1" ng-repeat="r in ctrl.types">
+            <a class="btn btn-info" ng-if="ctrl.current.type==r"
+               ng-click="ctrl.showType(r);"
+            >{{::r}}<span class="badge">{{ctrl.stat[r].num}}/{{::ctrl.stat[r].total}}</span></a>
+            <a class="btn btn-default btn-xs" ng-if="ctrl.current.type!=r"
+               ng-click="ctrl.showType(r);"
+            >{{::r}}<span class="badge">{{ctrl.stat[r].num}}/{{::ctrl.stat[r].total}}</span></a>
+        </div>
+        <div class="col-sm-1" ng-if="ctrl.type=='test' && ctrl.current.type=='单选'">
+            <a class="btn btn-default" ng-click="ctrl.setAutoGoto(true);" ng-if="!ctrl.autoGoto" title="在答题后不自动跳转到下一题">不自动跳题</a>
+            <a class="btn btn-success" ng-click="ctrl.setAutoGoto(false);" ng-if="ctrl.autoGoto" title="在答题后自动跳转到下一题">自动跳题</a>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalShowImage">
+    <div class="modal-dialog" style="width:auto;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h3 class="modal-title" ng-if="ctrl.image">{{ctrl.image.name}}</h3>
+                <h6 class="modal-title" ng-if="ctrl.image">ID= {{ctrl.image._id}}， 类型= {{ctrl.image.extension}}， 位置= {{ctrl.tree.currentPath}}</h6>
+            </div>
+            <div class="modal-body">
+                <input type="range" id="scale-range" min="0.5" max="3.0" step="0.01" value="1.0" style="display:block;margin:10px auto;width:320px"/>
+                <canvas id="canvas" style="display:block;margin:0 auto;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,51 @@
+<!-- 登陆视图配置 -->
+<div class="row col-md-6 col-md-offset-3">
+
+    <!-- 提示输入登陆信息的信息框，防止测试用户不知道如何登陆 -->
+    <!--
+    <div class="alert alert-info">
+
+        <a ng-repeat="u in login.validUsers" ng-click="login.setUser($index)"
+           class="btn btn-danger">
+            {{u.label}}
+        </a>
+    </div>
+    -->
+
+    <div class="jumbotron">
+        <h1>用户登录</h1>
+
+        <!-- 登陆表单，对应处理函数时当前控制对象的doLogin方法 -->
+        <form ng-submit="login.doLogin()">
+
+            <!-- 用户名 -->
+            <div class="form-group">
+                <label>用户代号</label>
+                <input type="text" class="form-control" ng-model="login.loginData.username">
+            </div>
+
+            <!-- 密码 -->
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" class="form-control" ng-model="login.loginData.password">
+            </div>
+
+            <!-- 登陆错误提示信息，如果有的话就显示 -->
+            <div class="alert alert-danger" ng-if="login.error">
+                {{ login.error }}
+            </div>
+
+            <!-- 登陆提交按钮 -->
+            <button type="submit" class="btn btn-block btn-primary">
+                <!-- 没有提交，就显示登陆的标签 -->
+                <span ng-if="!login.processing">登录</span>
+                <!--
+                    已经提交了，就显示一个繁忙图标
+                 -->
+                <span ng-if="login.processing" class="spinner"><span class="glyphicon glyphicon-repeat"></span></span>
+            </button>
+
+        </form>
+    </div>
+
+</div>

@@ -1,0 +1,211 @@
+<div class="page-header">
+    <h1>签到明细：{{::ctrl.data.name}}
+        <a ng-href="#" ng-click="ctrl.print();"
+           class="btn btn-default"><i class="fa fa-clipboard"></i>打印到Console</a>
+        <a ng-href="#" ng-click="ctrl.refresh();"
+            class="btn btn-primary"><i class="fa fa-refresh"></i>刷新</a>
+
+    </h1>
+    <h2>状态：
+        <label ng-if="ctrl.data.isClosed">已关闭</label>
+        <label ng-if="!ctrl.data.isClosed">签到中</label>
+        <a ng-href="#" ng-click="ctrl.switch();"
+           class="btn btn-info" ng-if="ctrl.data.isClosed">开启</a>
+        <a ng-href="#" ng-click="ctrl.switch();"
+           class="btn btn-success" ng-if="!ctrl.data.isClosed">关闭</a>
+    </h2>
+    <h4>签到对象：{{::ctrl.data.signgroup.name}}</h4>
+</div>
+
+<!-- 对有可能出现的修改后服务器的反馈信息，这里统一显示在提交表单的下面，当然只在有user.message的时候 -->
+<div class="row show-hide-message" ng-if="ctrl.message">
+    <div class="col-sm-6 col-sm-offset-2">
+        <!-- -->
+        <div class="alert alert-success" ng-if="ctrl.isSuccess">
+            {{ ctrl.message }}
+        </div>
+        <div class="alert alert-danger" ng-if="!ctrl.isSuccess">
+            {{ ctrl.message }}
+        </div>
+
+    </div>
+</div>
+
+<!-- 视图控制按钮-->
+<div class="row">
+    <div class="col-sm-1">
+        <a class="btn btn-info" ng-if="ctrl.filterKey==null">所有{{::ctrl.data.numExpected}}</a>
+        <a class="btn btn-default" ng-click="ctrl.setFilter(null);" ng-if="ctrl.filterKey!=null">所有{{::ctrl.data.numExpected}}</a>
+    </div><div class="col-sm-1">
+        <a class="btn btn-success"> </a>
+        <a class="btn btn-info" ng-if="ctrl.filtered.signed" ng-click="ctrl.setFilter('signed');">已签到{{ctrl.data.numReal}}</a>
+        <a class="btn btn-default" ng-if="!ctrl.filtered.signed" ng-click="ctrl.setFilter('signed');">已签到{{ctrl.data.numReal}}</a>
+    </div><div class="col-sm-1">
+        <a class="btn btn-default"> </a>
+        <a class="btn btn-info" ng-if="ctrl.filtered.unsigned" ng-click="ctrl.setFilter('unsigned');">未签到{{ctrl.data.numAbsent}}</a>
+        <a class="btn btn-default" ng-if="!ctrl.filtered.unsigned" ng-click="ctrl.setFilter('unsigned');">未签到{{ctrl.data.numAbsent}}</a>
+    </div><div class="col-sm-1">
+        <a class="btn btn-danger"> </a>
+        <a class="btn btn-info" ng-if="ctrl.filtered.agent" ng-click="ctrl.setFilter('agent');">代签{{ctrl.data.numAgent}}</a>
+        <a class="btn btn-default" ng-if="!ctrl.filtered.agent" ng-click="ctrl.setFilter('agent');">代签{{ctrl.data.numAgent}}</a>
+    </div><div class="col-sm-1">
+        <a class="btn btn-warning"> </a>
+        <a class="btn btn-info" ng-if="ctrl.filtered.excuse" ng-click="ctrl.setFilter('excuse');">请假{{ctrl.data.numExcuse}}</a>
+        <a class="btn btn-default" ng-if="!ctrl.filtered.excuse" ng-click="ctrl.setFilter('excuse');">请假{{ctrl.data.numExcuse}}</a>
+    </div>
+
+    <div class="col-sm-offset-1 col-sm-2" ng-if="ctrl.viewType=='table'">
+        <a ng-href="#" ng-click="ctrl.viewType='list';"
+           class="btn btn-info"><i class="fa fa-th"></i> 转到项目视图</a>
+    </div><div class="col-sm-offset-1 col-sm-2" ng-if="ctrl.viewType=='list'">
+        <a ng-href="#" ng-click="ctrl.viewType='table';"
+           class="btn btn-primary"><i class="fa fa-table"></i> 转到表格视图</a>
+    </div><div class="col-sm-2" ng-if="ctrl.viewType=='list'">
+        <a ng-href="#" ng-click="ctrl.showDetailName=false;" ng-if="ctrl.showDetailName"
+           class="btn btn-default"><i class="fa fa-user-times"></i> 不显示姓名</a>
+        <a ng-href="#" ng-click="ctrl.showDetailName=true;" ng-if="!ctrl.showDetailName"
+           class="btn btn-warning"><i class="fa fa-user-plus"></i> 显示姓名</a>
+    </div>
+
+    <div class="col-sm-2">
+        <a ng-href="#" class="btn btn-danger" ng-click="ctrl.checkIP();"><i class="fa fa-search"></i> 异常检测</a>
+    </div>
+</div>
+
+<p></p>
+
+<div class="col-sm-2" ng-if="ctrl.viewType=='list'" ng-repeat="r in ctrl.data.detail | orderBy: ctrl.sortKey | filter: ctrl.filter">
+    <a ng-href="#" ng-click="ctrl.setStatus(r);" class="btn btn-success"
+       ng-if="r.status == '已签到'"
+       title="设置{{::r.name.code}}, {{::r.name.name}}的签到状态">
+        {{::r.name.code}}<label ng-show="ctrl.showDetailName"> {{::r.name.name}}</label>
+    </a>
+    <a ng-href="#" ng-click="ctrl.setStatus(r);" class="btn btn-default"
+       ng-if="r.status == '未签到'"
+       title="设置{{::r.name.code}}, {{::r.name.name}}的签到状态">
+        {{::r.name.code}}<label ng-show="ctrl.showDetailName"> {{::r.name.name}}</label>
+    </a><a ng-href="#" ng-click="ctrl.setStatus(r);" class="btn btn-danger"
+       ng-if="r.status == '代签'"
+       title="设置{{::r.name.code}}, {{::r.name.name}}的签到状态">
+        {{::r.name.code}}<label ng-show="ctrl.showDetailName"> {{::r.name.name}}</label>
+    </a><a ng-href="#" ng-click="ctrl.setStatus(r);" class="btn btn-warning"
+       ng-if="r.status == '请假'"
+       title="设置{{::r.name.code}}, {{::r.name.name}}的签到状态">
+        {{::r.name.code}}<label ng-show="ctrl.showDetailName"> {{::r.name.name}}</label>
+    </a>
+</div>
+
+<!-- 表格视图 -->
+<table class="table table-bordered table-striped" ng-if="ctrl.viewType=='table'">
+    <thead>
+    <!-- 表头部分 -->
+    <tr>
+        <th class="col-sm-1 hidden-print">序号<span class="badge">{{::ctrl.data.detail.length}}</span></th>
+        <th class="col-sm-2 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('name.code');"
+            title="单击按学号排序，再次单击反序">学号</a>
+        </th><th class="col-sm-2 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('name.name');"
+            title="单击按名称排序，再次单击反序">名称</a>
+        </th><th class="col-sm-2 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('date');"
+            title="单击按时间排序，再次单击反序">时间</a>
+        </th><th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('status');"
+            title="单击按状态排序，再次单击反序">状态</a>
+        </th><th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('ip');"
+            title="单击按IP地址排序，再次单击反序">IP</a>
+        </th><th class="col-sm-1 hidden-print"><a ng-href="#" ng-click="ctrl.setSort('remark');"
+            title="单击按备注排序，再次单击反序">备注</a>
+        </th>
+        <th class="col-sm-3 hidden-print">操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 表的主体部分，对每一个用户对象来循环 -->
+    <tr ng-repeat="r in ctrl.data.detail | orderBy: ctrl.sortKey | filter: ctrl.filter">
+        <td>{{:: $index+1 }}</td>
+        <td>{{:: r.name.code }}</td>
+        <td>{{:: r.name.name }}</td>
+        <td>{{:: r.date }}</td>
+        <td>
+            <label class="btn btn-success" ng-if="r.status=='已签到'">{{r.status }}</label>
+            <label class="btn btn-default" ng-if="r.status=='未签到'">{{r.status }}</label>
+            <label class="btn btn-danger" ng-if="r.status=='代签'">{{r.status }}</label>
+            <label class="btn btn-warning" ng-if="r.status=='请假'">{{r.status }}</label>
+        </td>
+        <td>{{ r.ip }}</td>
+        <td><input type="text" class="form-control" ng-model="r.remark"></td>
+        <td>
+            <button ng-disabled="ctrl.data.isClosed" ng-click="ctrl.setStatus(r,'已签到');" class="btn btn-success" title="设置状态为已签到">签到</button>
+            <button ng-disabled="ctrl.data.isClosed" ng-click="ctrl.setStatus(r,'未签到');" class="btn btn-default" title="设置状态为未签到">未签</button>
+            <button ng-disabled="ctrl.data.isClosed" ng-click="ctrl.setStatus(r,'代签');" class="btn btn-danger" title="设置状态为代签">代签</button>
+            <button ng-disabled="ctrl.data.isClosed" ng-click="ctrl.setStatus(r,'请假');" class="btn btn-warning" title="设置状态为请假">请假</button>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- 显示IP签到异常信息的对话框 -->
+<div class="modal fade" id="modalIPs">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">共发现 {{ctrl.ips.length}} 个IP重复签到现象：</h4>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <div class="row" ng-repeat="r in ctrl.ips">
+                    <label class="col-sm-4 control-label" ng-dblclick="ctrl.setAgent(r);"
+                            title="双击设置这些签到状态为代签">{{::r.ip}}</label>
+                    <div class="col-sm-4" ng-repeat="d in r.detail">
+                        <label class="btn btn-default">
+                            {{::d.name.code}}{{::d.name.name}}
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalStatus">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">设置{{ctrl.current.name.code}},{{ctrl.current.name.name}}的签到状态：</h4>
+                <h4 class="modal-title">当前状态：{{ctrl.current.status}}</h4>
+                <h6 class="modal-title" ng-if="ctrl.saveMessage">{{ctrl.saveMessage}}</h6>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <div class="row">
+                    <label class="col-sm-2 control-label">备注</label>
+                    <div class="col-sm-10 btn-group">
+                        <input type="text" class="form-control" ng-model="ctrl.current.remark">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3">
+                        <a ng-href="#" ng-click="ctrl.setStatus(ctrl.current,'已签到');" class="btn btn-success btn-block" title="设置状态为已签到">签到</a>
+                    </div>
+                    <div class="col-sm-3">
+                        <a ng-href="#" ng-click="ctrl.setStatus(ctrl.current,'未签到');" class="btn btn-default btn-block" title="设置状态为未签到">未签</a>
+                    </div>
+                    <div class="col-sm-3">
+                        <a ng-href="#" ng-click="ctrl.setStatus(ctrl.current,'代签');" class="btn btn-danger btn-block" title="设置状态为代签">代签</a>
+                    </div>
+                    <div class="col-sm-3">
+                        <a ng-href="#" ng-click="ctrl.setStatus(ctrl.current,'请假');" class="btn btn-warning btn-block" title="设置状态为请假">请假</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
