@@ -1,8 +1,8 @@
 # yipan
 A teaching and examination system based on Mean framework.  
 
-[![Build Status](https://travis-ci.org/boennemann/badges.svg?branch=master)]()
-[![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=102)]()
+[![Build Status](https://travis-ci.org/boennemann/badges.svg?branch=master)](https://github.com/ylasyn/yixan)
+[![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=102)](https://github.com/ylasyn/yixan)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=102)](https://opensource.org/licenses/mit-license.php)
 
 ## Usage
