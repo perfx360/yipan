@@ -18,9 +18,9 @@ $ npm install && npm start
 
 Here are some pages at this web application.
 
-![image](https://raw.githubusercontent.com/ylasyn/yipan/master/exhibition/sign.PNG)
-![image](https://raw.githubusercontent.com/ylasyn/yipan/master/exhibition/examation.PNG)
-![image](https://raw.githubusercontent.com/ylasyn/yipan/master/exhibition/marking.PNG)
-![image](https://raw.githubusercontent.com/ylasyn/yipan/master/exhibition/file manage.PNG)
-![image](https://raw.githubusercontent.com/ylasyn/yipan/master/exhibition/file upload.PNG)
-![image](https://raw.githubusercontent.com/ylasyn/yipan/master/exhibition/system manage.PNG)
+![sign](http://7xs1tt.com1.z0.glb.clouddn.com/yipan/exhibition/sign.PNG)
+![examation](http://7xs1tt.com1.z0.glb.clouddn.com/yipan/exhibition/examation.PNG)
+![marking](http://7xs1tt.com1.z0.glb.clouddn.com/yipan/exhibition/marking.PNG)
+![file manage](http://7xs1tt.com1.z0.glb.clouddn.com/yipan/exhibition/file%20manage.PNG)
+![file upload](http://7xs1tt.com1.z0.glb.clouddn.com/yipan/exhibition/file%20upload.PNG)
+![system manage](http://7xs1tt.com1.z0.glb.clouddn.com/yipan/exhibition/system%20manage.PNG)
