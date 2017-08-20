@@ -1,20 +1,29 @@
 {
   "name": "yipan",
   "version": "0.3.32",
-  "description": "A teaching and examination system based on Mean framework.",
+  "description": "A teaching and examination system based on MEAN Stack(MongoDB+Express+Angularjs+Node.js)",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "start": "node server.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:meior/yipan.git"
+  },
   "keywords": [
-    "mean",
-    "file",
-    "download",
-    "upload"
+    "nodejs",
+    "express",
+    "angularjs",
+    "file-server",
+    "file-sharing"
   ],
-  "author": "mean group",
+  "author": "meior <494579004@qq.com>",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/meior/yipan/issues"
+  },
+  "homepage": "https://github.com/meior/yipan#readme",
   "dependencies": {
     "async": "^1.4.2",
     "bcrypt-nodejs": "0.0.3",
@@ -22,12 +31,14 @@
     "bower": "^1.5.2",
     "express": "^4.13.3",
     "file-stream-rotator": "0.0.6",
-    "fs": "0.0.2",
     "jsonfile": "^2.2.3",
     "jsonwebtoken": "^5.0.5",
     "mongoose": "^4.1.7",
     "morgan": "^1.6.1",
-    "multer": "^0.1.8",
-    "path": "^0.12.7"
+    "multer": "^0.1.8"
+  },
+  "devDependencies": {
+    "chai": "^4.1.1",
+    "mocha": "^3.5.0"
   }
 }
