@@ -15,11 +15,13 @@ var path              = require('path');           // get support of local file 
 var FileStreamRotator = require('file-stream-rotator');
 var fs                = require('fs');
 var logDirectory      = config.logDir;
-var exportDirectory      = config.exportDir;
+var exportDirectory   = config.exportDir;
+var uploadDirectory   = config.uploadDir;
 
-// ensure log directory exists
+// ensure directory exists
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory);
 fs.existsSync(exportDirectory) || fs.mkdirSync(exportDirectory);
+fs.existsSync(uploadDirectory) || fs.mkdirSync(uploadDirectory);
 
 // create a rotating write stream
 var accessLogStream = FileStreamRotator.getStream({
