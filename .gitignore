@@ -1,0 +1,6 @@
+npm-debug.log
+.idea/
+logs/
+public/bower/
+public/exports/
+public/uploads/
