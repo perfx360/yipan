@@ -1,17 +1,27 @@
 {
-  "name": "YiPan",
-  "version": "0.0.1",
-  "description": "a web file manager based on Mean framework",
+  "name": "yipan",
   "authors": [
-    "mean"
+    "meior <494579004@qq.com>"
+  ],
+  "description": "A teaching and examination system based on MEAN Stack(MongoDB+Express+Angularjs+Node.js)",
+  "main": "server.js",
+  "keywords": [
+    "nodejs",
+    "express",
+    "angularjs",
+    "mongodb",
+    "mean-stack",
+    "examination-management",
+    "examination",
+    "teaching"
   ],
   "license": "MIT",
+  "homepage": "https://github.com/meior/yipan#readme",
+  "private": true,
   "ignore": [
     "**/.*",
     "node_modules",
-    "bower_components",
-    "test",
-    "tests"
+    "public/bower"
   ],
   "dependencies": {
     "angular": "~1.4.5",
