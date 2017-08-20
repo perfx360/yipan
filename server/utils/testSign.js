@@ -1,5 +1,5 @@
 /**
- * ²âÊÔÇ©µ½Êı¾İ¿â
+ * æµ‹è¯•ç­¾åˆ°æ•°æ®åº“
  * Created by Administrator on 2016/3/16.
  */
 var mongoose = require('mongoose');
