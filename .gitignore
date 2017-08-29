@@ -4,3 +4,4 @@ logs/
 public/bower/
 public/exports/
 public/uploads/
+node_modules/
