@@ -32,7 +32,7 @@
     "angular-sanitize": "~1.4.7",
     "angular-strap": "~2.3.2",
     "angulartics": "~0.17.2",
-    "angular-tree-control": "0.2.20",
+    "angular-tree-control": "0.2.22",
     "async": "~1.4.2",
     "jquery": "~2.1.4",
     "SHA-1": "~0.1.1",
